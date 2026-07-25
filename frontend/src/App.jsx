@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SystemModeProvider } from './context/SystemModeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/Layout/DashboardLayout';
 import Login from './pages/Login';
@@ -14,6 +15,11 @@ import Collections from './pages/Collections';
 import MyActiveLoans from './pages/MyActiveLoans';
 import MonthlySettlements from './pages/MonthlySettlements';
 import PlaceholderView from './pages/PlaceholderView';
+import Settings from './pages/Settings';
+import Approvals from './pages/Approvals';
+import Notifications from './pages/Notifications';
+import AuditLogs from './pages/AuditLogs';
+import RiskManagement from './pages/RiskManagement';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
@@ -27,94 +33,137 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Public Login Route */}
-            <Route path="/login" element={<Login />} />
+        <SystemModeProvider>
+          <Router>
+            <Routes>
+              {/* Public Login Route */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Root Home Route */}
-            <Route path="/" element={<HomeRedirect />} />
+              {/* Root Home Route */}
+              <Route path="/" element={<HomeRedirect />} />
 
-            {/* Protected Dashboard Layout Shell */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-
-              {/* Admin Specific Routes */}
+              {/* Protected Dashboard Layout Shell */}
               <Route
-                path="/employees"
                 element={
-                  <ProtectedRoute allowedRoles={['Admin']}>
-                    <Employees />
+                  <ProtectedRoute>
+                    <DashboardLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/reports"
-                element={
-                  <ProtectedRoute allowedRoles={['Admin']}>
-                    <PlaceholderView title="Financial & Audit Reports" subtitle="Portfolio risk analysis, profit-and-loss statements, and audit trail logs." />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
 
-              {/* Shared Admin & Agent Routes */}
-              <Route
-                path="/customers"
-                element={
-                  <ProtectedRoute allowedRoles={['Admin', 'Agent']}>
-                    <Customers />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/loans"
-                element={
-                  <ProtectedRoute allowedRoles={['Admin', 'Agent']}>
-                    <Loans />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Settings — all authenticated users */}
+                <Route path="/settings" element={<Settings />} />
 
-              {/* Agent Specific Routes */}
-              <Route
-                path="/collections"
-                element={
-                  <ProtectedRoute allowedRoles={['Agent']}>
-                    <Collections />
-                  </ProtectedRoute>
-                }
-              />
+                {/* Admin & super_admin Routes */}
+                <Route
+                  path="/employees"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin']}>
+                      <Employees />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'auditor']}>
+                      <PlaceholderView title="Financial & Audit Reports" subtitle="Portfolio risk analysis, profit-and-loss statements, and audit trail logs." />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/audit-logs"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'auditor']}>
+                      <AuditLogs />
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* Customer Specific Routes */}
-              <Route
-                path="/active-loans"
-                element={
-                  <ProtectedRoute allowedRoles={['Customer']}>
-                    <MyActiveLoans />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settlements"
-                element={
-                  <ProtectedRoute allowedRoles={['Customer']}>
-                    <MonthlySettlements />
-                  </ProtectedRoute>
-                }
-              />
-            </Route>
+                {/* Shared Admin, Agent, credit_officer Routes */}
+                <Route
+                  path="/customers"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin', 'credit_officer']}>
+                      <Customers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/loans"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin', 'credit_officer']}>
+                      <Loans />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* Fallback Catch-all Route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+                {/* Loan Approval Workflow — Enterprise Mode */}
+                <Route
+                  path="/approvals"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'credit_officer', 'Agent']}>
+                      <Approvals />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Risk Management — credit officers and admins */}
+                <Route
+                  path="/risk-management"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'credit_officer', 'auditor']}>
+                      <RiskManagement />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Notifications — all staff */}
+                <Route
+                  path="/notifications"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin', 'credit_officer', 'auditor']}>
+                      <Notifications />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Collections — Admin & Agent */}
+                <Route
+                  path="/collections"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin']}>
+                      <Collections />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Customer Specific Routes */}
+                <Route
+                  path="/active-loans"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <MyActiveLoans />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settlements"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <MonthlySettlements />
+                    </ProtectedRoute>
+                  }
+                />
+              </Route>
+
+              {/* Fallback Catch-all Route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </SystemModeProvider>
       </AuthProvider>
     </ThemeProvider>
   );

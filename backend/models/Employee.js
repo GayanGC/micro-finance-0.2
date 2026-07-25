@@ -21,7 +21,7 @@ const employeeSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['Agent', 'Admin'],
+      enum: ['Agent', 'Admin', 'super_admin', 'credit_officer', 'auditor'],
       default: 'Agent',
     },
     basicSalary: {
@@ -32,6 +32,11 @@ const employeeSchema = new mongoose.Schema(
     department: {
       type: String,
       default: 'Field Operations',
+    },
+    branch: {
+      type: String,
+      default: 'HQ',
+      trim: true,
     },
     status: {
       type: String,

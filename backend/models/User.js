@@ -21,9 +21,10 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       select: false,
     },
+    // Extended role hierarchy for Enterprise mode
     role: {
       type: String,
-      enum: ['Admin', 'Agent', 'Customer'],
+      enum: ['Admin', 'Agent', 'Customer', 'super_admin', 'credit_officer', 'auditor'],
       default: 'Customer',
     },
     phone: {
@@ -42,6 +43,17 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: '',
+    },
+    // Branch assignment (Enterprise mode)
+    branch: {
+      type: String,
+      default: 'HQ',
+      trim: true,
+    },
+    department: {
+      type: String,
+      default: '',
+      trim: true,
     },
   },
   {

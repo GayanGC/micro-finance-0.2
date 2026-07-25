@@ -1,6 +1,16 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+const guarantorSchema = new mongoose.Schema({
+  name: { type: String, trim: true },
+  nicNumber: { type: String, trim: true },
+  phone: { type: String, trim: true },
+  relationship: { type: String, trim: true },
+  monthlyIncome: { type: Number, default: 0 },
+  incomeProof: { type: String, default: '' }, // file path / URL stub
+  address: { type: String, default: '' },
+}, { _id: true });
+
 const customerSchema = new mongoose.Schema(
   {
     fullName: {
@@ -42,6 +52,62 @@ const customerSchema = new mongoose.Schema(
     registeredBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
+    },
+
+    // === Risk & CRIB Management ===
+    isBlacklisted: {
+      type: Boolean,
+      default: false,
+    },
+    blacklistReason: {
+      type: String,
+      default: '',
+    },
+    cribCategory: {
+      type: String,
+      enum: ['A', 'B', 'C', 'D'],
+      default: 'A',
+    },
+    creditScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 850,
+    },
+    riskTag: {
+      type: String,
+      enum: ['Low', 'Medium', 'High', 'Very High'],
+      default: 'Low',
+    },
+
+    // === Financial Profile ===
+    monthlyIncome: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    monthlyExpenses: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    employmentType: {
+      type: String,
+      enum: ['Employed', 'Self-Employed', 'Business Owner', 'Unemployed', 'Other'],
+      default: 'Other',
+    },
+
+    // === Multi-Guarantor Support ===
+    guarantors: {
+      type: [guarantorSchema],
+      default: [],
+    },
+
+    // === Branch ===
+    branch: {
+      type: String,
+      default: 'HQ',
+      trim: true,
     },
   },
   {

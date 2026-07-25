@@ -11,7 +11,10 @@ import {
   Filter,
   PlusCircle,
   CreditCard,
-  Printer
+  Printer,
+  MapPin,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 
 const Collections = () => {
@@ -27,6 +30,10 @@ const Collections = () => {
   const [selectedLoanId, setSelectedLoanId] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cash');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
+  const [gpsLocation, setGpsLocation] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
     fetchCollectionsData();
@@ -61,6 +68,24 @@ const Collections = () => {
     }
   };
 
+  const captureGPS = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by this browser.');
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+        setGpsLoading(false);
+      },
+      () => {
+        alert('Unable to retrieve your location. Please allow location access.');
+        setGpsLoading(false);
+      }
+    );
+  };
+
   const handleRepaymentSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
@@ -77,10 +102,14 @@ const Collections = () => {
         loanId: selectedLoanId,
         amountPaid: Number(amountPaid),
         paymentMethod,
+        gpsLocation: gpsLocation || undefined,
+        notes: notes || undefined,
       });
 
       setMessage({ type: 'success', text: res.message || 'Repayment recorded successfully!' });
       setAmountPaid('');
+      setNotes('');
+      setGpsLocation(null);
       fetchCollectionsData();
     } catch (err) {
       setMessage({
@@ -96,7 +125,9 @@ const Collections = () => {
     const custName = (rep?.customerId?.fullName || rep?.customerId?.name || '').toLowerCase();
     const receiptNo = (rep?.receiptNumber || '').toLowerCase();
     const query = (searchTerm || '').toLowerCase();
-    return custName.includes(query) || receiptNo.includes(query);
+    const matchSearch = custName.includes(query) || receiptNo.includes(query);
+    const matchMethod = !paymentMethodFilter || rep.paymentMethod === paymentMethodFilter;
+    return matchSearch && matchMethod;
   });
 
   const totalCollectedToday = repayments.reduce((sum, r) => sum + (r.amountPaid || 0), 0);
@@ -182,8 +213,45 @@ const Collections = () => {
                   <option value="Cash">Agent Doorstep Cash</option>
                   <option value="Bank Transfer">Online Bank Transfer</option>
                   <option value="Mobile Pay">Mobile Pay / Wallet</option>
+                  <option value="Online Gateway">Online Payment Gateway</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Kiosk">Kiosk</option>
                 </select>
               </div>
+            </div>
+
+            {/* GPS Capture */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={captureGPS}
+                disabled={gpsLoading}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all ${
+                  gpsLocation
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-900/20'
+                }`}
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                {gpsLoading ? 'Getting GPS...' : gpsLocation ? `GPS: ${gpsLocation.lat.toFixed(4)}, ${gpsLocation.lng.toFixed(4)}` : 'Capture GPS Location'}
+              </button>
+              {gpsLocation && (
+                <button type="button" onClick={() => setGpsLocation(null)} className="text-xs text-red-400 hover:text-red-500">
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="block text-slate-600 dark:text-slate-300 mb-1">Notes (optional)</label>
+              <input
+                type="text"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Customer paid partial..." 
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              />
             </div>
 
             <button

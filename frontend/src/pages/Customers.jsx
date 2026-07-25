@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getCustomersApi, registerCustomerApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -12,8 +12,25 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  KeyRound
+  KeyRound,
+  ShieldOff,
+  TrendingUp,
+  Filter
 } from 'lucide-react';
+
+const RISK_COLORS = {
+  Low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  High: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  'Very High': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+};
+
+const CRIB_COLORS = {
+  A: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  B: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  C: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  D: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+};
 
 const Customers = () => {
   const { user } = useAuth();
@@ -22,6 +39,10 @@ const Customers = () => {
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
+  // Advanced filters
+  const [filterBlacklisted, setFilterBlacklisted] = useState('');
+  const [filterKYC, setFilterKYC] = useState('');
+  const [filterCRIB, setFilterCRIB] = useState('');
 
   // Customer Form State
   const [formData, setFormData] = useState({
@@ -33,21 +54,25 @@ const Customers = () => {
     kycStatus: 'Verified',
   });
 
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
-
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getCustomersApi();
+      const filters = {};
+      if (filterBlacklisted !== '') filters.isBlacklisted = filterBlacklisted;
+      if (filterKYC) filters.kycStatus = filterKYC;
+      if (filterCRIB) filters.cribCategory = filterCRIB;
+      const data = await getCustomersApi(filters);
       setCustomers(data);
     } catch (err) {
       console.error('Failed to fetch customers:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterBlacklisted, filterKYC, filterCRIB]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
