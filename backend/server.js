@@ -15,9 +15,6 @@ import systemRoutes from './routes/systemRoutes.js';
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB Database
-connectDB();
-
 const app = express();
 
 // Middleware
@@ -27,6 +24,16 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Database connection middleware for Serverless
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
