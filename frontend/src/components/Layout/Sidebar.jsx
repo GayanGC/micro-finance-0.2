@@ -22,6 +22,7 @@ import {
   Banknote,
   CalendarX2,
   BookOpen,
+  Calculator,
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, onCloseMobile }) => {
@@ -42,6 +43,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           ...(isEnterprise ? [{ name: 'Risk Management', path: '/risk-management', icon: AlertTriangle }] : []),
           { name: 'Collections', path: '/collections', icon: History },
           { name: 'Bulk Collections', path: '/bulk-collections', icon: Banknote, badge: 'NEW' },
+          { name: 'Cashier Desk', path: '/cashier-desk', icon: Calculator, badge: 'SHIFT' },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
           { name: 'Reports', path: '/reports', icon: BarChart3 },
           { name: 'Accounting', path: '/chart-of-accounts', icon: BookOpen },
@@ -57,6 +59,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           ...(isEnterprise ? [{ name: 'Approvals', path: '/approvals', icon: GitBranch, badge: 'NEW' }] : []),
           { name: 'Collections', path: '/collections', icon: History },
           { name: 'Bulk Collections', path: '/bulk-collections', icon: Banknote, badge: 'NEW' },
+          { name: 'Cashier Desk', path: '/cashier-desk', icon: Calculator, badge: 'SHIFT' },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
         ];
       case 'credit_officer':

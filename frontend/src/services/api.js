@@ -322,6 +322,31 @@ export const getDashboardAnalyticsApi = async () => {
   return response.data;
 };
 
+// ==========================================
+// CASH REGISTER API
+// ==========================================
+export const openRegisterApi = async (registerData) => {
+  const response = await API.post('/registers/open', registerData);
+  return response.data;
+};
+
+export const getActiveRegisterApi = async () => {
+  const response = await API.get('/registers/active');
+  return response.data;
+};
+
+export const closeRegisterApi = async (closingData) => {
+  const response = await API.post('/registers/close', closingData);
+  return response.data;
+};
+
+export const getAllRegistersApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/registers${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+
 
 
 export default API;

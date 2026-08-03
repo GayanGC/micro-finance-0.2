@@ -25,6 +25,7 @@ import Holidays from './pages/Holidays';
 import Reports from './pages/Reports';
 import CustomerProfile from './pages/CustomerProfile';
 import ChartOfAccounts from './pages/ChartOfAccounts';
+import CashierDesk from './pages/CashierDesk';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
@@ -111,6 +112,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin', 'credit_officer']}>
                       <Customers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cashier-desk"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin', 'auditor', 'credit_officer']}>
+                      <CashierDesk />
                     </ProtectedRoute>
                   }
                 />
