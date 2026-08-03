@@ -256,4 +256,31 @@ export const deleteHolidayApi = async (id) => {
   return response.data;
 };
 
+// ==========================================
+// REPORTS API
+// ==========================================
+export const getLoanReportApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/reports/loans${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const getCollectionReportApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/reports/collections${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const getOutstandingReportApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/reports/outstanding${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const getPnLReportApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/reports/pnl${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
 export default API;

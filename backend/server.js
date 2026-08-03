@@ -12,6 +12,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
 import holidayRoutes from './routes/holidayRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -47,6 +48,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/system', systemRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check endpoint (legacy + new)
 app.get('/api/health', (req, res) => {

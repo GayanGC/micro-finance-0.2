@@ -22,6 +22,7 @@ import Notifications from './pages/Notifications';
 import AuditLogs from './pages/AuditLogs';
 import RiskManagement from './pages/RiskManagement';
 import Holidays from './pages/Holidays';
+import Reports from './pages/Reports';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
@@ -81,7 +82,7 @@ function App() {
                   path="/reports"
                   element={
                     <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'auditor']}>
-                      <PlaceholderView title="Financial & Audit Reports" subtitle="Portfolio risk analysis, profit-and-loss statements, and audit trail logs." />
+                      <Reports />
                     </ProtectedRoute>
                   }
                 />
