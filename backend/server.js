@@ -88,7 +88,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5050;
 
-app.listen(PORT, () => {
-  console.log(`🚀 [Server Running]: Microfinance Backend API v2.0 on port ${PORT}`);
-  console.log(`📊 [Routes]: Auth | Employees | Customers | Policies | Loans | Repayments | Notifications | Audit | System | Holidays`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 [Server Running]: Microfinance Backend API v2.0 on port ${PORT}`);
+    console.log(`📊 [Routes]: Auth | Employees | Customers | Policies | Loans | Repayments | Notifications | Audit | System | Holidays | Reports | Accounting | Dashboard | Registers`);
+  });
+}
+
+export default app;
+
