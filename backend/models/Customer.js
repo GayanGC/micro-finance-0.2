@@ -103,10 +103,20 @@ const customerSchema = new mongoose.Schema(
       default: [],
     },
 
-    // === Branch ===
+    // === Organizational Hierarchy ===
     branch: {
       type: String,
       default: 'HQ',
+      trim: true,
+    },
+    center: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    group: {
+      type: String,
+      default: '',
       trim: true,
     },
   },

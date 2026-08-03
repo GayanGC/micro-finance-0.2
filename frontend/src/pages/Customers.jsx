@@ -52,6 +52,9 @@ const Customers = () => {
     address: '',
     nicNumber: '',
     kycStatus: 'Verified',
+    branch: 'HQ',
+    center: '',
+    group: '',
   });
 
   const fetchCustomers = useCallback(async () => {
@@ -99,6 +102,9 @@ const Customers = () => {
         address: '',
         nicNumber: '',
         kycStatus: 'Verified',
+        branch: 'HQ',
+        center: '',
+        group: '',
       });
       fetchCustomers();
     } catch (err) {
@@ -241,6 +247,48 @@ const Customers = () => {
                 <option value="Pending">Pending Audit</option>
                 <option value="Rejected">Rejected</option>
               </select>
+            </div>
+
+            {/* Organizational Hierarchy */}
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
+              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Organizational Hierarchy</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-slate-600 dark:text-slate-300 mb-1">Branch</label>
+                  <input
+                    type="text"
+                    name="branch"
+                    value={formData.branch}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Colombo HQ"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-600 dark:text-slate-300 mb-1">Center</label>
+                    <input
+                      type="text"
+                      name="center"
+                      value={formData.center}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Center A"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-600 dark:text-slate-300 mb-1">Group</label>
+                    <input
+                      type="text"
+                      name="group"
+                      value={formData.group}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Group 01"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             <button

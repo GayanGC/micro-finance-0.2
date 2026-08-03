@@ -100,6 +100,8 @@ export const createLoan = async (req, res) => {
       collateral,
       guarantorCustomers,
       penaltyRate,
+      gracePeriod,
+      penaltyInterestRate,
       isEnterpriseMode,
     } = req.body;
 
@@ -151,6 +153,8 @@ export const createLoan = async (req, res) => {
       status: initialStatus,
       issuedBy: req.user._id,
       penaltyRate: penaltyRate || 2,
+      gracePeriod: gracePeriod !== undefined ? Number(gracePeriod) : 0,
+      penaltyInterestRate: penaltyInterestRate !== undefined ? Number(penaltyInterestRate) : 0,
       interestMethod: policy.interestType,
       nextDueDate,
       isEnterpriseMode: enterpriseMode,

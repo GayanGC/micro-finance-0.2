@@ -120,6 +120,18 @@ const loanSchema = new mongoose.Schema(
       default: 2, // 2% per month default penalty
       min: 0,
     },
+    // Grace period in days before penalty is applied
+    gracePeriod: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    // Annual penalty interest rate (%) applied after grace period
+    penaltyInterestRate: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     penaltyAccrued: {
       type: Number,
       default: 0,

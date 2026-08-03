@@ -21,6 +21,8 @@ export const registerCustomer = async (req, res) => {
       employmentType,
       guarantors,
       branch,
+      center,
+      group,
     } = req.body;
 
     if (!fullName || !phone || !pin || !address || !nicNumber) {
@@ -64,6 +66,8 @@ export const registerCustomer = async (req, res) => {
       riskTag,
       cribCategory,
       branch: branch || 'HQ',
+      center: center || '',
+      group: group || '',
     });
 
     // Auto-create Customer portal user account using phone
@@ -147,6 +151,8 @@ export const updateCustomer = async (req, res) => {
       guarantors,
       address,
       branch,
+      center,
+      group,
     } = req.body;
 
     // Apply updates
@@ -161,6 +167,8 @@ export const updateCustomer = async (req, res) => {
     if (guarantors !== undefined) customer.guarantors = guarantors;
     if (address !== undefined) customer.address = address;
     if (branch !== undefined) customer.branch = branch;
+    if (center !== undefined) customer.center = center;
+    if (group !== undefined) customer.group = group;
 
     // Recalculate credit score after updates
     const existingLoans = await Loan.find({ customer: customer._id });

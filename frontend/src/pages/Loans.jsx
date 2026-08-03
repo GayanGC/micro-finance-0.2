@@ -43,6 +43,8 @@ const Loans = () => {
   const [selectedPolicyId, setSelectedPolicyId] = useState('');
   const [principalAmount, setPrincipalAmount] = useState('');
   const [collateralDetails, setCollateralDetails] = useState('');
+  const [gracePeriod, setGracePeriod] = useState(0);
+  const [penaltyInterestRate, setPenaltyInterestRate] = useState(0);
   const [submittingLoan, setSubmittingLoan] = useState(false);
 
   // Live Auto-Calculation State
@@ -126,10 +128,14 @@ const Loans = () => {
         policyId: selectedPolicyId,
         principalAmount: Number(principalAmount),
         collateralDetails,
+        gracePeriod: Number(gracePeriod),
+        penaltyInterestRate: Number(penaltyInterestRate),
       });
       setMessage({ type: 'success', text: res.message || 'Loan issued successfully!' });
       setPrincipalAmount('');
       setCollateralDetails('');
+      setGracePeriod(0);
+      setPenaltyInterestRate(0);
       setCalculation(null);
       fetchInitialData();
     } catch (err) {
@@ -392,6 +398,40 @@ const Loans = () => {
                   placeholder="Property deed, guarantor NIC, or vehicle RC details"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
                 />
+              </div>
+
+              {/* Penalty Rules */}
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">Penalty Rules</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-brand-500" /> Grace Period (days)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={gracePeriod}
+                      onChange={(e) => setGracePeriod(e.target.value)}
+                      placeholder="e.g. 7"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-600 dark:text-slate-300 mb-1 flex items-center gap-1">
+                      <Percent className="w-3.5 h-3.5 text-brand-500" /> Penalty Interest Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.1}
+                      value={penaltyInterestRate}
+                      onChange={(e) => setPenaltyInterestRate(e.target.value)}
+                      placeholder="e.g. 5.0"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
               </div>
 
               <button
