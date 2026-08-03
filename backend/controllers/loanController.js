@@ -6,6 +6,7 @@ import { computePenalty, generateAmortizationSchedule, classifyPAR } from '../ut
 import { triggerNotification } from '../utils/notificationScheduler.js';
 import { shiftDueDateAsync } from '../utils/dateHelpers.js';
 import { sendWhatsApp, TEMPLATES } from '../utils/whatsappService.js';
+import { postAutomaticJournalEntry } from '../utils/accountingHelper.js';
 
 // Financial Calculation Engine Helper
 export const computeLoanMath = (principal, annualRate, durationMonths, interestType) => {
@@ -172,6 +173,19 @@ export const createLoan = async (req, res) => {
     const populatedLoan = await Loan.findById(loan._id)
       .populate('customer', 'fullName phone nicNumber address creditScore riskTag')
       .populate('policy', 'policyName interestRate durationMonths interestType');
+
+    // Automatic General Ledger Journal Entry (for active disbursed loans)
+    if (initialStatus === 'Active') {
+      postAutomaticJournalEntry({
+        date: new Date(),
+        referenceId: String(loan._id).slice(-8).toUpperCase(),
+        description: `Loan Principal Disbursement for ${customer.fullName}`,
+        debitAccountName: 'Loans Principal Receivable',
+        creditAccountName: 'Cash on Hand / Vault',
+        amount: math.principalAmount,
+        createdBy: req.user._id,
+      }).catch(() => {});
+    }
 
     // Send approval notification if enterprise mode
     if (enterpriseMode) {
@@ -355,6 +369,17 @@ export const approveLoan = async (req, res) => {
       loan.approvalWorkflow.branchManagerApprovedBy = req.user._id;
       loan.approvalWorkflow.currentStage = 'fully_approved';
       loan.status = 'Active'; // Final approval — activate loan
+
+      // Automatic General Ledger Journal Entry upon final disbursement approval
+      postAutomaticJournalEntry({
+        date: new Date(),
+        referenceId: String(loan._id).slice(-8).toUpperCase(),
+        description: `Approved Loan Principal Disbursement for ${loan.customer?.fullName || 'Customer'}`,
+        debitAccountName: 'Loans Principal Receivable',
+        creditAccountName: 'Cash on Hand / Vault',
+        amount: loan.principalAmount,
+        createdBy: req.user._id,
+      }).catch(() => {});
 
       await triggerNotification('loan_approval', {
         loanId: loan._id,

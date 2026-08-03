@@ -4,6 +4,7 @@ import Customer from '../models/Customer.js';
 import { computePenalty } from '../utils/penaltyEngine.js';
 import { triggerNotification } from '../utils/notificationScheduler.js';
 import { sendWhatsApp, TEMPLATES } from '../utils/whatsappService.js';
+import { postAutomaticJournalEntry } from '../utils/accountingHelper.js';
 
 // @desc    Submit a Repayment & deduct from Loan remaining balance
 // @route   POST /api/repayments/add
@@ -81,6 +82,34 @@ export const addRepayment = async (req, res) => {
       loan.status = 'Completed';
     }
     await loan.save();
+
+    // Automatic General Ledger Journal Entry
+    const debitAccName = paymentMethod === 'Bank Transfer' ? 'Bank Operating Account' : 'Cash on Hand / Vault';
+    const principalPortion = payAmount - penaltyPaid;
+
+    if (principalPortion > 0) {
+      postAutomaticJournalEntry({
+        date: effectivePaymentDate,
+        referenceId: receiptNumber,
+        description: `Repayment Collection #${receiptNumber} (${loan.customer?.fullName || 'Customer'})`,
+        debitAccountName: debitAccName,
+        creditAccountName: 'Loans Principal Receivable',
+        amount: principalPortion,
+        createdBy: req.user._id,
+      }).catch(() => {});
+    }
+
+    if (penaltyPaid > 0) {
+      postAutomaticJournalEntry({
+        date: effectivePaymentDate,
+        referenceId: receiptNumber,
+        description: `Late Fee Revenue Collection #${receiptNumber} (${loan.customer?.fullName || 'Customer'})`,
+        debitAccountName: debitAccName,
+        creditAccountName: 'Late Fee & Penalty Revenue',
+        amount: penaltyPaid,
+        createdBy: req.user._id,
+      }).catch(() => {});
+    }
 
     // Trigger payment notification (in-app)
     await triggerNotification('payment_received', {
@@ -292,6 +321,34 @@ export const bulkRepayment = async (req, res) => {
           loan.status = 'Completed';
         }
         await loan.save();
+
+        // Automatic General Ledger Journal Entry
+        const debitAccName = paymentMethod === 'Bank Transfer' ? 'Bank Operating Account' : 'Cash on Hand / Vault';
+        const principalPortion = payAmount - penaltyPaid;
+
+        if (principalPortion > 0) {
+          postAutomaticJournalEntry({
+            date: effectiveDate,
+            referenceId: receiptNumber,
+            description: `Bulk Repayment Collection #${receiptNumber} (${loan.customer?.fullName || 'Customer'})`,
+            debitAccountName: debitAccName,
+            creditAccountName: 'Loans Principal Receivable',
+            amount: principalPortion,
+            createdBy: req.user._id,
+          }).catch(() => {});
+        }
+
+        if (penaltyPaid > 0) {
+          postAutomaticJournalEntry({
+            date: effectiveDate,
+            referenceId: receiptNumber,
+            description: `Bulk Penalty Collection #${receiptNumber} (${loan.customer?.fullName || 'Customer'})`,
+            debitAccountName: debitAccName,
+            creditAccountName: 'Late Fee & Penalty Revenue',
+            amount: penaltyPaid,
+            createdBy: req.user._id,
+          }).catch(() => {});
+        }
 
         // Fire notifications (non-blocking)
         triggerNotification('payment_received', {
