@@ -11,6 +11,7 @@ import repaymentRoutes from './routes/repaymentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
+import holidayRoutes from './routes/holidayRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,7 @@ app.use('/api/repayments', repaymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/holidays', holidayRoutes);
 
 // Health check endpoint (legacy + new)
 app.get('/api/health', (req, res) => {
@@ -80,5 +82,5 @@ const PORT = process.env.PORT || 5050;
 
 app.listen(PORT, () => {
   console.log(`🚀 [Server Running]: Microfinance Backend API v2.0 on port ${PORT}`);
-  console.log(`📊 [Routes]: Auth | Employees | Customers | Policies | Loans | Repayments | Notifications | Audit | System`);
+  console.log(`📊 [Routes]: Auth | Employees | Customers | Policies | Loans | Repayments | Notifications | Audit | System | Holidays`);
 });

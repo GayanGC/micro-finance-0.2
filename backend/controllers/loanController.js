@@ -1,8 +1,10 @@
 import Loan from '../models/Loan.js';
 import Policy from '../models/Policy.js';
 import Customer from '../models/Customer.js';
+import Holiday from '../models/Holiday.js';
 import { computePenalty, generateAmortizationSchedule, classifyPAR } from '../utils/penaltyEngine.js';
 import { triggerNotification } from '../utils/notificationScheduler.js';
+import { shiftDueDateAsync } from '../utils/dateHelpers.js';
 
 // Financial Calculation Engine Helper
 export const computeLoanMath = (principal, annualRate, durationMonths, interestType) => {
@@ -131,9 +133,10 @@ export const createLoan = async (req, res) => {
       policy.interestType
     );
 
-    // Set first due date (30 days from now)
-    const nextDueDate = new Date();
-    nextDueDate.setDate(nextDueDate.getDate() + 30);
+    // Set first due date (30 days from now) — shifted past any holidays
+    const rawNextDue = new Date();
+    rawNextDue.setDate(rawNextDue.getDate() + 30);
+    const nextDueDate = await shiftDueDateAsync(rawNextDue);
 
     // In Enterprise mode, loan starts as Pending (needs approval)
     const enterpriseMode = isEnterpriseMode === true;
@@ -267,12 +270,16 @@ export const getAmortizationSchedule = async (req, res) => {
     const loan = await Loan.findById(req.params.id).populate('policy');
     if (!loan) return res.status(404).json({ message: 'Loan not found' });
 
+    // Fetch holidays for holiday-aware schedule
+    const holidays = await Holiday.find({}).lean();
+
     const schedule = generateAmortizationSchedule(
       loan.principalAmount,
       loan.policy.interestRate,
       loan.policy.durationMonths,
       loan.interestMethod || loan.policy.interestType,
-      loan.disbursedAt
+      loan.disbursedAt,
+      holidays
     );
 
     const penaltyInfo = computePenalty(loan);

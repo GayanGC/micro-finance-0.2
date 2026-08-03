@@ -21,6 +21,7 @@ import Approvals from './pages/Approvals';
 import Notifications from './pages/Notifications';
 import AuditLogs from './pages/AuditLogs';
 import RiskManagement from './pages/RiskManagement';
+import Holidays from './pages/Holidays';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
@@ -56,6 +57,16 @@ function App() {
 
                 {/* Settings — all authenticated users */}
                 <Route path="/settings" element={<Settings />} />
+
+                {/* Holiday Plan — Admin only */}
+                <Route
+                  path="/holidays"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin']}>
+                      <Holidays />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* Admin & super_admin Routes */}
                 <Route

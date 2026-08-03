@@ -237,4 +237,23 @@ export const getSystemHealthApi = async () => {
   return response.data;
 };
 
+// ==========================================
+// HOLIDAY API
+// ==========================================
+export const getHolidaysApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/holidays${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const createHolidayApi = async (holidayData) => {
+  const response = await API.post('/holidays', holidayData);
+  return response.data;
+};
+
+export const deleteHolidayApi = async (id) => {
+  const response = await API.delete(`/holidays/${id}`);
+  return response.data;
+};
+
 export default API;

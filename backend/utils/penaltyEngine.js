@@ -3,6 +3,8 @@
  * Computes overdue days, late payment penalties, and PAR bucket classification.
  */
 
+import { shiftToWorkingDay } from './dateHelpers.js';
+
 /**
  * Classify PAR bucket based on overdue days
  * @param {number} overdueDays
@@ -56,12 +58,13 @@ export const computePenalty = (loan, paymentDate = new Date()) => {
 };
 
 /**
- * Generate full amortization schedule for a loan
+ * Generate full amortization schedule for a loan, with holiday-aware due date shifting.
  * @param {number} principal
  * @param {number} annualRate - Annual interest rate %
  * @param {number} durationMonths
  * @param {string} interestMethod - 'Flat' | 'Reducing Balance' | 'Amortization'
  * @param {Date} startDate
+ * @param {Array} [holidays=[]] - Array of Holiday documents for due-date shifting
  * @returns {Array} Array of schedule installments
  */
 export const generateAmortizationSchedule = (
@@ -69,7 +72,8 @@ export const generateAmortizationSchedule = (
   annualRate,
   durationMonths,
   interestMethod = 'Flat',
-  startDate = new Date()
+  startDate = new Date(),
+  holidays = []
 ) => {
   const P = Number(principal);
   const rate = Number(annualRate);
@@ -93,8 +97,9 @@ export const generateAmortizationSchedule = (
       const principalComponent = Math.round((emi - interestComponent) * 100) / 100;
       balance = Math.max(0, Math.round((balance - principalComponent) * 100) / 100);
 
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(dueDate.getMonth() + month);
+      const rawDueDate = new Date(startDate);
+      rawDueDate.setMonth(rawDueDate.getMonth() + month);
+      const dueDate = shiftToWorkingDay(rawDueDate, holidays);
 
       schedule.push({
         installmentNo: month,
@@ -104,6 +109,10 @@ export const generateAmortizationSchedule = (
         interestComponent,
         balance,
         status: 'Pending',
+        ...(dueDate.getTime() !== rawDueDate.getTime() && {
+          originalDueDate: rawDueDate.toISOString().split('T')[0],
+          shifted: true,
+        }),
       });
     }
   } else {
@@ -118,8 +127,9 @@ export const generateAmortizationSchedule = (
     for (let month = 1; month <= n; month++) {
       balance = Math.max(0, Math.round((balance - emi) * 100) / 100);
 
-      const dueDate = new Date(startDate);
-      dueDate.setMonth(dueDate.getMonth() + month);
+      const rawDueDate = new Date(startDate);
+      rawDueDate.setMonth(rawDueDate.getMonth() + month);
+      const dueDate = shiftToWorkingDay(rawDueDate, holidays);
 
       schedule.push({
         installmentNo: month,
@@ -129,6 +139,10 @@ export const generateAmortizationSchedule = (
         interestComponent: monthlyInterest,
         balance,
         status: 'Pending',
+        ...(dueDate.getTime() !== rawDueDate.getTime() && {
+          originalDueDate: rawDueDate.toISOString().split('T')[0],
+          shifted: true,
+        }),
       });
     }
   }

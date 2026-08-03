@@ -20,6 +20,7 @@ import {
   FileText,
   AlertTriangle,
   Banknote,
+  CalendarX2,
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, onCloseMobile }) => {
@@ -43,6 +44,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
           { name: 'Reports', path: '/reports', icon: BarChart3 },
           ...(isEnterprise && config.auditLogsEnabled ? [{ name: 'Audit Logs', path: '/audit-logs', icon: FileText }] : []),
+          { name: 'Holiday Plan', path: '/holidays', icon: CalendarX2 },
           { name: 'Settings', path: '/settings', icon: Settings },
         ];
       case 'Agent':
