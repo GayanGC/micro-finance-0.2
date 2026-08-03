@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   Banknote,
   CalendarX2,
+  BookOpen,
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, onCloseMobile }) => {
@@ -43,6 +44,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           { name: 'Bulk Collections', path: '/bulk-collections', icon: Banknote, badge: 'NEW' },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
           { name: 'Reports', path: '/reports', icon: BarChart3 },
+          { name: 'Accounting', path: '/chart-of-accounts', icon: BookOpen },
           ...(isEnterprise && config.auditLogsEnabled ? [{ name: 'Audit Logs', path: '/audit-logs', icon: FileText }] : []),
           { name: 'Holiday Plan', path: '/holidays', icon: CalendarX2 },
           { name: 'Settings', path: '/settings', icon: Settings },
@@ -63,6 +65,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           { name: 'Customers', path: '/customers', icon: UserCheck },
           { name: 'Loans', path: '/loans', icon: CreditCard },
           { name: 'Approvals', path: '/approvals', icon: GitBranch, badge: 'NEW' },
+          { name: 'Accounting', path: '/chart-of-accounts', icon: BookOpen },
           { name: 'Risk Management', path: '/risk-management', icon: AlertTriangle },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
         ];
@@ -70,6 +73,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
         return [
           { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
           { name: 'Reports', path: '/reports', icon: BarChart3 },
+          { name: 'Accounting', path: '/chart-of-accounts', icon: BookOpen },
           { name: 'Risk Management', path: '/risk-management', icon: AlertTriangle },
           { name: 'Audit Logs', path: '/audit-logs', icon: FileText },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),

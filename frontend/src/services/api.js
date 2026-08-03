@@ -289,4 +289,30 @@ export const getPnLReportApi = async (filters = {}) => {
   return response.data;
 };
 
+// ==========================================
+// ACCOUNTING / GENERAL LEDGER API
+// ==========================================
+export const getAccountsApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/accounting/accounts${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const createAccountApi = async (accountData) => {
+  const response = await API.post('/accounting/accounts', accountData);
+  return response.data;
+};
+
+export const getJournalEntriesApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/accounting/journal-entries${params ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const createJournalEntryApi = async (entryData) => {
+  const response = await API.post('/accounting/journal-entries', entryData);
+  return response.data;
+};
+
+
 export default API;

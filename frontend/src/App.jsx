@@ -24,6 +24,7 @@ import RiskManagement from './pages/RiskManagement';
 import Holidays from './pages/Holidays';
 import Reports from './pages/Reports';
 import CustomerProfile from './pages/CustomerProfile';
+import ChartOfAccounts from './pages/ChartOfAccounts';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
@@ -84,6 +85,14 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'auditor']}>
                       <Reports />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/chart-of-accounts"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'auditor', 'credit_officer']}>
+                      <ChartOfAccounts />
                     </ProtectedRoute>
                   }
                 />
