@@ -19,6 +19,7 @@ import {
   Settings,
   FileText,
   AlertTriangle,
+  Banknote,
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, onCloseMobile }) => {
@@ -38,6 +39,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           ...(isEnterprise ? [{ name: 'Approvals', path: '/approvals', icon: GitBranch, badge: 'NEW' }] : []),
           ...(isEnterprise ? [{ name: 'Risk Management', path: '/risk-management', icon: AlertTriangle }] : []),
           { name: 'Collections', path: '/collections', icon: History },
+          { name: 'Bulk Collections', path: '/bulk-collections', icon: Banknote, badge: 'NEW' },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
           { name: 'Reports', path: '/reports', icon: BarChart3 },
           ...(isEnterprise && config.auditLogsEnabled ? [{ name: 'Audit Logs', path: '/audit-logs', icon: FileText }] : []),
@@ -50,6 +52,7 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
           { name: 'Loans', path: '/loans', icon: CreditCard },
           ...(isEnterprise ? [{ name: 'Approvals', path: '/approvals', icon: GitBranch, badge: 'NEW' }] : []),
           { name: 'Collections', path: '/collections', icon: History },
+          { name: 'Bulk Collections', path: '/bulk-collections', icon: Banknote, badge: 'NEW' },
           ...(config.notificationsEnabled ? [{ name: 'Notifications', path: '/notifications', icon: Bell }] : []),
         ];
       case 'credit_officer':

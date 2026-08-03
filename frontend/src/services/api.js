@@ -171,6 +171,11 @@ export const getRepaymentsApi = async (filters = {}) => {
   return response.data;
 };
 
+export const bulkRepaymentApi = async (bulkData) => {
+  const response = await API.post('/repayments/bulk', bulkData);
+  return response.data;
+};
+
 // ==========================================
 // NOTIFICATION API
 // ==========================================

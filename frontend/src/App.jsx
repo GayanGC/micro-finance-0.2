@@ -12,6 +12,7 @@ import Employees from './pages/Employees';
 import Customers from './pages/Customers';
 import Loans from './pages/Loans';
 import Collections from './pages/Collections';
+import BulkCollections from './pages/BulkCollections';
 import MyActiveLoans from './pages/MyActiveLoans';
 import MonthlySettlements from './pages/MonthlySettlements';
 import PlaceholderView from './pages/PlaceholderView';
@@ -136,6 +137,16 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin']}>
                       <Collections />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Bulk Collections — Field Officers / Cashiers */}
+                <Route
+                  path="/bulk-collections"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin']}>
+                      <BulkCollections />
                     </ProtectedRoute>
                   }
                 />
