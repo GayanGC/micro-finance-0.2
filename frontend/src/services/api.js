@@ -100,6 +100,12 @@ export const recalculateCreditScoreApi = async (id) => {
   return response.data;
 };
 
+export const getCustomerTimelineApi = async (id) => {
+  const response = await API.get(`/customers/${id}/timeline`);
+  return response.data;
+};
+
+
 // ==========================================
 // POLICY API
 // ==========================================

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getCustomersApi, registerCustomerApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -15,7 +16,8 @@ import {
   KeyRound,
   ShieldOff,
   TrendingUp,
-  Filter
+  Filter,
+  ExternalLink,
 } from 'lucide-react';
 
 const RISK_COLORS = {
@@ -34,6 +36,7 @@ const CRIB_COLORS = {
 
 const Customers = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -336,14 +339,20 @@ const Customers = () => {
                   <th className="px-4 py-3">Phone / Auth ID</th>
                   <th className="px-4 py-3">NIC Number</th>
                   <th className="px-4 py-3">KYC Status</th>
-                  <th className="px-4 py-3 rounded-r-xl">Agent</th>
+                  <th className="px-4 py-3">Agent</th>
+                  <th className="px-4 py-3 rounded-r-xl">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {filteredCustomers.map((cust, idx) => (
                   <tr key={cust._id || cust.phone || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                    <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white">
-                      {cust?.fullName || cust?.name || 'N/A'}
+                    <td className="px-4 py-3.5">
+                      <button
+                        onClick={() => navigate(`/customers/${cust._id}`)}
+                        className="font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 transition text-left"
+                      >
+                        {cust?.fullName || cust?.name || 'N/A'}
+                      </button>
                       <div className="text-[11px] font-normal text-slate-400 truncate max-w-[200px]">{cust?.address || 'N/A'}</div>
                     </td>
                     <td className="px-4 py-3.5 font-semibold text-slate-800 dark:text-slate-200">{cust?.phone || 'N/A'}</td>
@@ -364,11 +373,19 @@ const Customers = () => {
                     <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400">
                       {cust?.registeredBy?.name || user?.name || 'System Agent'}
                     </td>
+                    <td className="px-4 py-3.5">
+                       <button
+                         onClick={() => navigate(`/customers/${cust._id}`)}
+                         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 hover:bg-brand-200 dark:hover:bg-brand-900/60 transition"
+                       >
+                         <ExternalLink className="w-3 h-3" /> View Profile
+                       </button>
+                    </td>
                   </tr>
                 ))}
                 {filteredCustomers.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="text-center py-6 text-slate-400">
+                    <td colSpan="6" className="text-center py-6 text-slate-400">
                       No matching customer accounts found.
                     </td>
                   </tr>

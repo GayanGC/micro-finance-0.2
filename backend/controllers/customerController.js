@@ -235,3 +235,147 @@ export const recalculateCreditScore = async (req, res) => {
     return res.status(500).json({ message: 'Failed to recalculate credit score', error: error.message });
   }
 };
+
+// @desc    Get unified Credit History Timeline for a customer
+// @route   GET /api/customers/:id/timeline
+// @access  Private (Admin, Agent, super_admin, credit_officer)
+export const getCustomerTimeline = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id)
+      .populate('registeredBy', 'name role')
+      .lean();
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found.' });
+    }
+
+    // Fetch all loans for this customer
+    const loans = await Loan.find({ customer: customer._id })
+      .populate('policy', 'policyName interestRate durationMonths interestType')
+      .populate('issuedBy', 'name role')
+      .lean();
+
+    // Fetch all repayments across all customer's loans
+    const loanIds = loans.map((l) => l._id);
+    const Repayment = (await import('../models/Repayment.js')).default;
+    const repayments = await Repayment.find({ loanId: { $in: loanIds } })
+      .populate('collectedBy', 'name role')
+      .lean();
+
+    // ── Build unified events array ─────────────────────────────────
+    const events = [];
+
+    // Customer registration event
+    events.push({
+      date: customer.createdAt,
+      type: 'CUSTOMER_REGISTERED',
+      amount: 0,
+      referenceId: String(customer._id).slice(-8).toUpperCase(),
+      notes: `Customer registered by ${customer.registeredBy?.name || 'System'}. KYC: ${customer.kycStatus}.`,
+      meta: { kycStatus: customer.kycStatus },
+    });
+
+    // Loan disbursement & milestone events
+    for (const loan of loans) {
+      events.push({
+        date: loan.disbursedAt || loan.createdAt,
+        type: 'DISBURSEMENT',
+        amount: loan.principalAmount,
+        referenceId: String(loan._id).slice(-8).toUpperCase(),
+        notes: `Loan disbursed under policy "${loan.policy?.policyName || 'N/A'}". Total payable: ${Number(loan.totalPayable || 0).toFixed(2)}.`,
+        meta: {
+          loanId: loan._id,
+          policyName: loan.policy?.policyName,
+          interestRate: loan.policy?.interestRate,
+          durationMonths: loan.policy?.durationMonths,
+          status: loan.status,
+          issuedBy: loan.issuedBy?.name,
+        },
+      });
+
+      // Overdue / Defaulted flag event
+      if ((loan.status === 'Overdue' || loan.status === 'Defaulted') && loan.overdueDays > 0) {
+        events.push({
+          date: loan.nextDueDate || loan.updatedAt,
+          type: 'PENALTY',
+          amount: 0,
+          referenceId: String(loan._id).slice(-8).toUpperCase(),
+          notes: `Loan ${loan.status.toUpperCase()} — ${loan.overdueDays} days overdue. PAR Bucket: ${loan.parBucket || 'N/A'}.`,
+          meta: { loanId: loan._id, overdueDays: loan.overdueDays, parBucket: loan.parBucket },
+        });
+      }
+
+      // Loan fully repaid milestone
+      if (loan.status === 'Completed') {
+        events.push({
+          date: loan.updatedAt,
+          type: 'LOAN_COMPLETED',
+          amount: loan.totalPayable,
+          referenceId: String(loan._id).slice(-8).toUpperCase(),
+          notes: `Loan fully repaid! Total paid: ${Number(loan.totalPayable || 0).toFixed(2)}.`,
+          meta: { loanId: loan._id },
+        });
+      }
+    }
+
+    // Repayment events
+    for (const r of repayments) {
+      events.push({
+        date: r.paymentDate || r.createdAt,
+        type: 'REPAYMENT',
+        amount: r.amountPaid,
+        referenceId: r.receiptNumber,
+        notes: `Payment via ${r.paymentMethod}. Balance after: ${Number(r.newRemainingBalance || 0).toFixed(2)}. Collected by: ${r.collectedBy?.name || 'System'}.`,
+        meta: {
+          receiptNumber: r.receiptNumber,
+          paymentMethod: r.paymentMethod,
+          newRemainingBalance: r.newRemainingBalance,
+          penaltyPaid: r.penaltyPaid,
+          collectedBy: r.collectedBy?.name,
+        },
+      });
+
+      // Separate penalty node if penalty was paid
+      if (r.penaltyPaid > 0) {
+        events.push({
+          date: r.paymentDate || r.createdAt,
+          type: 'PENALTY',
+          amount: r.penaltyPaid,
+          referenceId: r.receiptNumber,
+          notes: `Late fee of ${Number(r.penaltyPaid).toFixed(2)} included in this payment.`,
+          meta: { penaltyPaid: r.penaltyPaid },
+        });
+      }
+    }
+
+    // Sort chronologically (oldest first)
+    events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // ── Portfolio summary ──────────────────────────────────────────
+    const summary = {
+      totalBorrowed: loans.reduce((s, l) => s + (l.principalAmount || 0), 0),
+      totalPayable: loans.reduce((s, l) => s + (l.totalPayable || 0), 0),
+      totalPaid: repayments.reduce((s, r) => s + (r.amountPaid || 0), 0),
+      totalOutstanding: loans
+        .filter((l) => l.status !== 'Completed')
+        .reduce((s, l) => s + (l.remainingBalance || 0), 0),
+      activeLoans: loans.filter((l) => l.status === 'Active').length,
+      completedLoans: loans.filter((l) => l.status === 'Completed').length,
+      overdueLoans: loans.filter((l) => l.status === 'Overdue' || l.status === 'Defaulted').length,
+      totalLoans: loans.length,
+      creditScore: customer.creditScore || 0,
+      riskTag: customer.riskTag || 'Low',
+      cribCategory: customer.cribCategory || 'A',
+    };
+
+    // Round currency values
+    ['totalBorrowed', 'totalPayable', 'totalPaid', 'totalOutstanding'].forEach((k) => {
+      summary[k] = Math.round(summary[k] * 100) / 100;
+    });
+
+    return res.json({ customer, summary, events, loans });
+  } catch (error) {
+    console.error('[getCustomerTimeline] Error:', error);
+    return res.status(500).json({ message: 'Failed to load customer timeline', error: error.message });
+  }
+};
