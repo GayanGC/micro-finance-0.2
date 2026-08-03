@@ -3,6 +3,7 @@ import Loan from '../models/Loan.js';
 import Customer from '../models/Customer.js';
 import { computePenalty } from '../utils/penaltyEngine.js';
 import { triggerNotification } from '../utils/notificationScheduler.js';
+import { sendWhatsApp, TEMPLATES } from '../utils/whatsappService.js';
 
 // @desc    Submit a Repayment & deduct from Loan remaining balance
 // @route   POST /api/repayments/add
@@ -18,6 +19,7 @@ export const addRepayment = async (req, res) => {
       chequeStatus,
       notes,
       paymentDate,
+      sendWhatsAppMsg = true, // Default ON
     } = req.body;
 
     if (!loanId || !amountPaid || Number(amountPaid) <= 0) {
@@ -80,12 +82,22 @@ export const addRepayment = async (req, res) => {
     }
     await loan.save();
 
-    // Trigger payment notification
+    // Trigger payment notification (in-app)
     await triggerNotification('payment_received', {
       loanId: loan._id,
       customerId: loan.customer._id,
       metadata: { amountPaid: payAmount, receiptNumber },
     });
+
+    // WhatsApp notification
+    if (sendWhatsAppMsg) {
+      const customerPhone = loan.customer?.phone;
+      const customerName = loan.customer?.fullName || 'Customer';
+      const msg = newBalance <= 0
+        ? TEMPLATES.loan_completed(customerName, loan.totalPayable)
+        : TEMPLATES.payment_received(customerName, payAmount, receiptNumber, newBalance);
+      sendWhatsApp(customerPhone, msg).catch(() => {}); // Non-blocking
+    }
 
     if (newBalance <= 0) {
       await triggerNotification('loan_completed', {
@@ -217,7 +229,7 @@ export const getRepayments = async (req, res) => {
 // @access  Private (Admin, Agent, super_admin)
 export const bulkRepayment = async (req, res) => {
   try {
-    const { payments, paymentDate, paymentMethod, notes } = req.body;
+    const { payments, paymentDate, paymentMethod, notes, sendWhatsAppMsg = true } = req.body;
 
     if (!Array.isArray(payments) || payments.length === 0) {
       return res.status(400).json({ message: 'Please provide a non-empty payments array.' });
@@ -287,6 +299,13 @@ export const bulkRepayment = async (req, res) => {
           customerId: loan.customer._id,
           metadata: { amountPaid: payAmount, receiptNumber, bulk: true },
         }).catch(() => {});
+
+        // WhatsApp notification per entry
+        if (sendWhatsAppMsg && loan.customer?.phone) {
+          const customerName = loan.customer?.fullName || 'Customer';
+          const msg = TEMPLATES.bulk_payment(customerName, payAmount, receiptNumber);
+          sendWhatsApp(loan.customer.phone, msg).catch(() => {});
+        }
 
         if (newBalance <= 0) {
           triggerNotification('loan_completed', {

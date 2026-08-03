@@ -5,6 +5,7 @@ import Holiday from '../models/Holiday.js';
 import { computePenalty, generateAmortizationSchedule, classifyPAR } from '../utils/penaltyEngine.js';
 import { triggerNotification } from '../utils/notificationScheduler.js';
 import { shiftDueDateAsync } from '../utils/dateHelpers.js';
+import { sendWhatsApp, TEMPLATES } from '../utils/whatsappService.js';
 
 // Financial Calculation Engine Helper
 export const computeLoanMath = (principal, annualRate, durationMonths, interestType) => {
@@ -105,6 +106,7 @@ export const createLoan = async (req, res) => {
       gracePeriod,
       penaltyInterestRate,
       isEnterpriseMode,
+      sendWhatsAppMsg = true, // Default ON
     } = req.body;
 
     if (!customerId || !policyId || !principalAmount) {
@@ -178,6 +180,18 @@ export const createLoan = async (req, res) => {
         customerId: customer._id,
         metadata: { stage: 'pending_agent_review' },
       });
+    }
+
+    // WhatsApp notification
+    if (sendWhatsAppMsg && customer.phone) {
+      const policyName = populatedLoan?.policy?.policyName || policy.policyName || 'Standard';
+      const nextDueStr = nextDueDate
+        ? new Date(nextDueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+        : 'N/A';
+      const msg = enterpriseMode
+        ? `📋 *Loan Application Submitted*\n\nDear *${customer.fullName}*,\n\nYour loan application of *$${math.principalAmount.toFixed(2)}* is under review. You will be notified upon approval.\n\n— MicroFinance Team`
+        : TEMPLATES.loan_approved(customer.fullName, math.principalAmount, policyName, nextDueStr);
+      sendWhatsApp(customer.phone, msg).catch(() => {}); // Non-blocking
     }
 
     return res.status(201).json({

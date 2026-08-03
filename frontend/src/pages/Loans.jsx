@@ -45,6 +45,7 @@ const Loans = () => {
   const [collateralDetails, setCollateralDetails] = useState('');
   const [gracePeriod, setGracePeriod] = useState(0);
   const [penaltyInterestRate, setPenaltyInterestRate] = useState(0);
+  const [sendWhatsApp, setSendWhatsApp] = useState(true);
   const [submittingLoan, setSubmittingLoan] = useState(false);
 
   // Live Auto-Calculation State
@@ -130,6 +131,7 @@ const Loans = () => {
         collateralDetails,
         gracePeriod: Number(gracePeriod),
         penaltyInterestRate: Number(penaltyInterestRate),
+        sendWhatsAppMsg: sendWhatsApp,
       });
       setMessage({ type: 'success', text: res.message || 'Loan issued successfully!' });
       setPrincipalAmount('');
@@ -432,6 +434,29 @@ const Loans = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* WhatsApp Confirmation Toggle */}
+              <div className="border-t border-slate-200 dark:border-slate-800 pt-3">
+                <label className="flex items-center justify-between cursor-pointer gap-3 select-none">
+                  <span className="flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <span className="text-base">📱</span>
+                    Send WhatsApp Confirmation
+                    <span className="text-[10px] text-slate-400 font-normal">(to customer)</span>
+                  </span>
+                  <div
+                    onClick={() => setSendWhatsApp(!sendWhatsApp)}
+                    className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer flex-shrink-0 ${
+                      sendWhatsApp ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                        sendWhatsApp ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </div>
+                </label>
               </div>
 
               <button
