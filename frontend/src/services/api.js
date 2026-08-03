@@ -314,5 +314,14 @@ export const createJournalEntryApi = async (entryData) => {
   return response.data;
 };
 
+// ==========================================
+// DASHBOARD ANALYTICS API
+// ==========================================
+export const getDashboardAnalyticsApi = async () => {
+  const response = await API.get('/dashboard/analytics');
+  return response.data;
+};
+
+
 
 export default API;
