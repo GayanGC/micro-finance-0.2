@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCustomerTimelineApi } from '../services/api';
+import { generatePaymentReceipt } from '../utils/receiptGenerator';
 import {
   ArrowLeft,
   User,
@@ -20,6 +21,7 @@ import {
   Star,
   Activity,
   RefreshCw,
+  Download,
 } from 'lucide-react';
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -394,6 +396,28 @@ const CustomerProfile = () => {
                         <span className="text-[10px] text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
                           #{event.referenceId}
                         </span>
+                        {event.type === 'REPAYMENT' && (
+                          <button
+                            onClick={() =>
+                              generatePaymentReceipt(
+                                {
+                                  receiptNumber: event.referenceId,
+                                  paymentDate: event.date,
+                                  amountPaid: event.amount,
+                                  paymentMethod: event.meta?.paymentMethod || 'Cash',
+                                  newRemainingBalance: event.meta?.newRemainingBalance,
+                                  penaltyPaid: event.meta?.penaltyPaid || 0,
+                                  collectedBy: event.meta?.collectedBy,
+                                },
+                                customer
+                              )
+                            }
+                            title="Download Payment Receipt PDF"
+                            className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-800 transition ml-auto"
+                          >
+                            <Download className="w-3 h-3" /> Receipt PDF
+                          </button>
+                        )}
                       </div>
                       <span className="text-[11px] text-slate-400 whitespace-nowrap">{fmtDate(event.date)}</span>
                     </div>

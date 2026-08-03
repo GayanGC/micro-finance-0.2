@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PrintStatementButton from '../components/PrintStatementButton';
 import { getLoansApi, addRepaymentApi, getRepaymentsApi } from '../services/api';
+import { generatePaymentReceipt } from '../utils/receiptGenerator';
 import {
   History,
   Search,
@@ -15,6 +16,8 @@ import {
   MapPin,
   Wifi,
   WifiOff,
+  Download,
+  FileText,
 } from 'lucide-react';
 
 const Collections = () => {
@@ -109,6 +112,12 @@ const Collections = () => {
       });
 
       setMessage({ type: 'success', text: res.message || 'Repayment recorded successfully!' });
+      
+      // Auto-generate & download PDF Receipt
+      if (res.repayment) {
+        generatePaymentReceipt(res.repayment, res.repayment.customerId, res.repayment.loanId);
+      }
+
       setAmountPaid('');
       setNotes('');
       setGpsLocation(null);
@@ -367,8 +376,15 @@ const Collections = () => {
                   <td className="px-4 py-3.5 text-slate-400">
                     {rep.paymentDate ? new Date(rep.paymentDate).toLocaleTimeString() : 'Just Now'}
                   </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <PrintStatementButton receiptData={rep} title="Collection Receipt" label="Print Receipt" />
+                  <td className="px-4 py-3.5 text-right flex items-center justify-end gap-1.5">
+                    <button
+                      onClick={() => generatePaymentReceipt(rep, rep.customerId, rep.loanId)}
+                      title="Download Official PDF Receipt"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 hover:bg-brand-200 dark:hover:bg-brand-900/60 transition"
+                    >
+                      <Download className="w-3 h-3" /> PDF Receipt
+                    </button>
+                    <PrintStatementButton receiptData={rep} title="Collection Receipt" label="Print" />
                   </td>
                 </tr>
               ))}
