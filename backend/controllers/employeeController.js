@@ -59,3 +59,15 @@ export const getEmployees = async (req, res) => {
     return res.status(500).json({ message: 'Error retrieving employees' });
   }
 };
+
+// @desc    Get all users with 'Agent' role (for assignment dropdown)
+// @route   GET /api/employees/agents
+// @access  Private
+export const getAgents = async (req, res) => {
+  try {
+    const agents = await User.find({ role: 'Agent' }).select('_id name email phone branch').sort({ name: 1 });
+    return res.json(agents);
+  } catch (error) {
+    return res.status(500).json({ message: 'Error retrieving agents list', error: error.message });
+  }
+};

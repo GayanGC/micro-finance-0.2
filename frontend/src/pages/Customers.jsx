@@ -27,6 +27,8 @@ const RISK_COLORS = {
   'Very High': 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
 };
 
+import { getCustomersApi, registerCustomerApi, updateCustomerApi, getAgentsApi } from '../services/api';
+
 const CRIB_COLORS = {
   A: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
   B: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
@@ -38,6 +40,7 @@ const Customers = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,6 +61,7 @@ const Customers = () => {
     branch: 'HQ',
     center: '',
     group: '',
+    assignedAgent: '',
   });
 
   const fetchCustomers = useCallback(async () => {
@@ -67,8 +71,12 @@ const Customers = () => {
       if (filterBlacklisted !== '') filters.isBlacklisted = filterBlacklisted;
       if (filterKYC) filters.kycStatus = filterKYC;
       if (filterCRIB) filters.cribCategory = filterCRIB;
-      const data = await getCustomersApi(filters);
-      setCustomers(data);
+      const [data, agentsData] = await Promise.all([
+        getCustomersApi(filters),
+        getAgentsApi().catch(() => []),
+      ]);
+      setCustomers(data || []);
+      setAgents(agentsData || []);
     } catch (err) {
       console.error('Failed to fetch customers:', err);
     } finally {
@@ -247,9 +255,32 @@ const Customers = () => {
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
               >
                 <option value="Verified">Verified (Instant Approval)</option>
-                <option value="Pending">Pending Audit</option>
+                <option value="Pending">Pending Document Audit</option>
                 <option value="Rejected">Rejected</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-slate-600 dark:text-slate-300 mb-1 font-bold text-brand-600 dark:text-brand-400">
+                Assign to Field Agent
+              </label>
+              <select
+                name="assignedAgent"
+                value={formData.assignedAgent}
+                onChange={handleInputChange}
+                disabled={user?.role === 'Agent'}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold"
+              >
+                <option value="">-- Unassigned (HQ Pool) --</option>
+                {agents.map((ag) => (
+                  <option key={ag._id} value={ag._id}>
+                    {ag.name} ({ag.branch || 'Agent'})
+                  </option>
+                ))}
+              </select>
+              {user?.role === 'Agent' && (
+                <p className="text-[10px] text-slate-400 mt-1">Automatically assigned to you as the registering field officer.</p>
+              )}
             </div>
 
             {/* Organizational Hierarchy */}
@@ -370,8 +401,10 @@ const Customers = () => {
                         {cust?.kycStatus || 'Pending'}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400">
-                      {cust?.registeredBy?.name || user?.name || 'System Agent'}
+                    <td className="px-4 py-3.5">
+                      <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                        {cust?.assignedAgent?.name || cust?.registeredBy?.name || 'Unassigned'}
+                      </span>
                     </td>
                     <td className="px-4 py-3.5">
                        <button

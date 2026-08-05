@@ -605,5 +605,11 @@ export const getPortalSettlementsApi = async () => {
   return response.data;
 };
 
+export const getAgentsApi = async () => {
+  const response = await API.get('/employees/agents');
+  return response.data;
+};
+
 export default API;
+
 

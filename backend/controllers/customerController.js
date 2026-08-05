@@ -50,6 +50,12 @@ export const registerCustomer = async (req, res) => {
     const { score, riskTag } = computeCreditScore(tempCustomer, []);
     const cribCategory = scoreToCribCategory(score);
 
+    // Handle Agent Assignment
+    let agentId = req.body.assignedAgent || null;
+    if (req.user.role === 'Agent') {
+      agentId = req.user._id;
+    }
+
     const customer = await Customer.create({
       fullName,
       phone,
@@ -58,6 +64,7 @@ export const registerCustomer = async (req, res) => {
       nicNumber,
       kycStatus: kycStatus || 'Pending',
       registeredBy: req.user._id,
+      assignedAgent: agentId,
       monthlyIncome: monthlyIncome || 0,
       monthlyExpenses: monthlyExpenses || 0,
       employmentType: employmentType || 'Other',
@@ -97,6 +104,7 @@ export const registerCustomer = async (req, res) => {
         creditScore: customer.creditScore,
         riskTag: customer.riskTag,
         cribCategory: customer.cribCategory,
+        assignedAgent: customer.assignedAgent,
       },
     });
   } catch (error) {
@@ -105,7 +113,7 @@ export const registerCustomer = async (req, res) => {
   }
 };
 
-// @desc    Get all Customers with filters
+// @desc    Get all Customers with filters (Agent data isolation enforced)
 // @route   GET /api/customers
 // @access  Private (Admin & Agent)
 export const getCustomers = async (req, res) => {
@@ -119,8 +127,14 @@ export const getCustomers = async (req, res) => {
     if (branch) filter.branch = branch;
     if (riskTag) filter.riskTag = riskTag;
 
+    // Enforce Agent Data Isolation
+    if (req.user && req.user.role === 'Agent') {
+      filter.$or = [{ assignedAgent: req.user._id }, { registeredBy: req.user._id }];
+    }
+
     const customers = await Customer.find(filter)
       .populate('registeredBy', 'name role')
+      .populate('assignedAgent', 'name email phone')
       .sort({ createdAt: -1 });
 
     return res.json(customers);
@@ -153,6 +167,7 @@ export const updateCustomer = async (req, res) => {
       branch,
       center,
       group,
+      assignedAgent,
     } = req.body;
 
     // Apply updates
@@ -169,6 +184,7 @@ export const updateCustomer = async (req, res) => {
     if (branch !== undefined) customer.branch = branch;
     if (center !== undefined) customer.center = center;
     if (group !== undefined) customer.group = group;
+    if (assignedAgent !== undefined) customer.assignedAgent = assignedAgent || null;
 
     // Recalculate credit score after updates
     const existingLoans = await Loan.find({ customer: customer._id });

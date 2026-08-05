@@ -259,6 +259,15 @@ export const getLoans = async (req, res) => {
       }
     }
 
+    // Enforce Agent Data Isolation (Agents see only loans for their assigned customers)
+    if (req.user && req.user.role === 'Agent') {
+      const agentCustomerIds = await Customer.find({
+        $or: [{ assignedAgent: req.user._id }, { registeredBy: req.user._id }],
+      }).distinct('_id');
+
+      filter.customer = { $in: agentCustomerIds };
+    }
+
     // Advanced filters
     if (parBucket) filter.parBucket = parBucket;
     if (branch) filter.branch = branch;
