@@ -33,12 +33,45 @@ const Collections = () => {
   // Repayment Submission Form State
   const [selectedLoanId, setSelectedLoanId] = useState('');
   const [amountPaid, setAmountPaid] = useState('');
+  const [paymentMode, setPaymentMode] = useState('full'); // 'full' | 'interest' | 'custom'
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [gpsLocation, setGpsLocation] = useState(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [notes, setNotes] = useState('');
   const [sendWhatsApp, setSendWhatsApp] = useState(true);
+
+  const selectedLoan = loans.find((l) => l._id === selectedLoanId);
+
+  const calculateInterestDue = (loan) => {
+    if (!loan) return 0;
+    const capital = loan.remainingPrincipal ?? loan.principalAmount ?? 0;
+    const annualRate = loan.policy?.interestRate || 12;
+    const monthlyRate = (annualRate / 100) / 12;
+    return Math.round(capital * monthlyRate * 100) / 100;
+  };
+
+  const handleModeChange = (mode, loan = selectedLoan) => {
+    setPaymentMode(mode);
+    if (!loan) return;
+    if (mode === 'full') {
+      setAmountPaid(String(loan.monthlyInstallment || ''));
+    } else if (mode === 'interest') {
+      const interestDue = calculateInterestDue(loan);
+      setAmountPaid(String(interestDue));
+    } else if (mode === 'custom') {
+      setAmountPaid('');
+    }
+  };
+
+  const handleLoanSelectionChange = (e) => {
+    const loanId = e.target.value;
+    setSelectedLoanId(loanId);
+    const loan = loans.find((l) => l._id === loanId);
+    if (loan) {
+      handleModeChange(paymentMode, loan);
+    }
+  };
 
   useEffect(() => {
     fetchCollectionsData();
@@ -200,6 +233,48 @@ const Collections = () => {
               </select>
             </div>
 
+            {/* Segmented Radio Button Group for Payment Mode */}
+            {selectedLoan && (
+              <div>
+                <label className="block text-slate-600 dark:text-slate-300 mb-1 font-bold">Select Collection Payment Mode</label>
+                <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange('full')}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition ${
+                      paymentMode === 'full'
+                        ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Full EMI (${selectedLoan.monthlyInstallment})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange('interest')}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition ${
+                      paymentMode === 'interest'
+                        ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Interest Only (${calculateInterestDue(selectedLoan)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange('custom')}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition ${
+                      paymentMode === 'custom'
+                        ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    Custom Amount
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-slate-600 dark:text-slate-300 mb-1">Amount Paid ($) *</label>
@@ -209,20 +284,14 @@ const Collections = () => {
                   required
                   min={0.01}
                   value={amountPaid}
-                  onChange={(e) => setAmountPaid(e.target.value)}
+                  onChange={(e) => {
+                    setAmountPaid(e.target.value);
+                    setPaymentMode('custom');
+                  }}
                   placeholder="350.00"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold text-sm"
                 />
               </div>
-
-              {selectedLoan && Number(amountPaid) > (selectedLoan.monthlyInstallment || 0) && (
-                <div className="sm:col-span-2 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2 animate-fade-in font-semibold">
-                  <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                  <span>
-                    <strong>Excess Capital Paydown!</strong> Extra amount of <strong>${(Number(amountPaid) - Number(selectedLoan.monthlyInstallment)).toFixed(2)}</strong> will directly reduce the remaining Capital Principal! Future monthly interest will adjust automatically.
-                  </span>
-                </div>
-              )}
 
               <div>
                 <label className="block text-slate-600 dark:text-slate-300 mb-1">Payment Method / Channel</label>
@@ -240,6 +309,45 @@ const Collections = () => {
                 </select>
               </div>
             </div>
+
+            {/* Dynamic Payment Breakdown Box */}
+            {selectedLoan && amountPaid && Number(amountPaid) > 0 && (() => {
+              const capital = selectedLoan.remainingPrincipal ?? selectedLoan.principalAmount ?? 0;
+              const annualRate = selectedLoan.policy?.interestRate || 12;
+              const interestDue = Math.round((capital * (annualRate / 100 / 12)) * 100) / 100;
+              const paid = Number(amountPaid);
+              const actualInterest = Math.min(paid, interestDue);
+              const capitalReduction = Math.max(0, Math.round((paid - actualInterest) * 100) / 100);
+              const shortfall = interestDue > paid ? Math.round((interestDue - paid) * 100) / 100 : 0;
+
+              return (
+                <div className="space-y-2 animate-fade-in">
+                  <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs flex flex-wrap items-center justify-between gap-2 font-medium">
+                    <span className="text-slate-600 dark:text-slate-300 font-semibold">
+                      Payment Breakdown (${paid.toFixed(2)}):
+                    </span>
+                    <div className="flex items-center gap-3 font-bold">
+                      <span className="text-purple-600 dark:text-purple-400">Interest Portion: ${actualInterest.toFixed(2)}</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">Capital Reduction: ${capitalReduction.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {shortfall > 0 && (
+                    <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2 font-bold">
+                      <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <span>Warning: Payment does not cover full interest (${interestDue.toFixed(2)} due). Arrears of <strong>${shortfall.toFixed(2)}</strong> will carry forward.</span>
+                    </div>
+                  )}
+
+                  {capitalReduction > 0 && paid > (selectedLoan.monthlyInstallment || 0) && (
+                    <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2 font-bold">
+                      <Zap className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <span>Excess Capital Paydown! Extra <strong>${(paid - selectedLoan.monthlyInstallment).toFixed(2)}</strong> will directly reduce the remaining Capital Principal!</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* GPS Capture */}
             <div className="flex items-center gap-3">
@@ -397,12 +505,14 @@ const Collections = () => {
                       <td className="px-4 py-3 text-right">
                         <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
                           s.status === 'paid'
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                             : s.status === 'partial'
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200'
-                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700'
                         }`}>
-                          {s.status?.toUpperCase() || 'PENDING'}
+                          {s.status === 'partial'
+                            ? `PARTIAL ($${Math.max(0, (s.expectedInstallment || 0) - (s.paidAmount || 0)).toFixed(2)} DUE)`
+                            : s.status?.toUpperCase() || 'PENDING'}
                         </span>
                       </td>
                     </tr>

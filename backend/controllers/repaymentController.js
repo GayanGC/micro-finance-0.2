@@ -1,6 +1,7 @@
 import Repayment from '../models/Repayment.js';
 import Loan from '../models/Loan.js';
 import Customer from '../models/Customer.js';
+import Policy from '../models/Policy.js';
 import { computePenalty } from '../utils/penaltyEngine.js';
 import { triggerNotification } from '../utils/notificationScheduler.js';
 import { sendWhatsApp, TEMPLATES } from '../utils/whatsappService.js';
@@ -46,7 +47,9 @@ export const addRepayment = async (req, res) => {
 
     // === Step A & B: Identify Policy Method & Calculate Interest Due ===
     const isReducing = loan.interestMethod === 'Reducing Balance' || loan.interestMethod === 'Amortization';
-    const annualRate = Number(loan.policy?.interestRate || 12);
+    const policyObj = loan.policy?.interestRate ? loan.policy : await Policy.findById(loan.policy);
+    const annualRate = Number(policyObj?.interestRate || 12);
+    const durationMonths = Number(policyObj?.durationMonths || 12);
     const monthlyRate = (annualRate / 100) / 12;
 
     const currentPrincipal = loan.remainingPrincipal !== undefined && loan.remainingPrincipal !== null 
@@ -56,7 +59,7 @@ export const addRepayment = async (req, res) => {
     // Interest due for this period on current remaining capital
     const interestDue = isReducing
       ? Math.round(currentPrincipal * monthlyRate * 100) / 100
-      : Math.round(((loan.totalInterest || 0) / (loan.policy?.durationMonths || 12)) * 100) / 100;
+      : Math.round(((loan.totalInterest || 0) / durationMonths) * 100) / 100;
 
     // === Step C: Subtract Penalty & Interest to get Principal Paydown (Capital Reduction) ===
     const netAfterPenalty = Math.max(0, payAmount - penaltyPaid);
