@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     // Extended role hierarchy for Enterprise mode
     role: {
       type: String,
-      enum: ['Admin', 'Agent', 'Customer', 'super_admin', 'credit_officer', 'auditor'],
+      enum: ['Admin', 'Agent', 'Customer', 'super_admin', 'SUPER_ADMIN', 'credit_officer', 'auditor'],
       default: 'Customer',
     },
     phone: {

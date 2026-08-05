@@ -23,6 +23,8 @@ import {
   CalendarX2,
   BookOpen,
   Calculator,
+  Crown,
+  Building2,
 } from 'lucide-react';
 
 const Sidebar = ({ mobileOpen, onCloseMobile }) => {
@@ -32,9 +34,27 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
 
   const getNavItems = () => {
     switch (role) {
+      case 'SUPER_ADMIN':
+        return [
+          { name: 'SaaS Dashboard', path: '/super-admin/dashboard', icon: Crown, badge: 'SaaS' },
+          { name: 'Tenant Subscriptions', path: '/super-admin/tenants', icon: Building2 },
+          { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+          { name: 'Employees', path: '/employees', icon: Users },
+          { name: 'Customers', path: '/customers', icon: UserCheck },
+          { name: 'Loans', path: '/loans', icon: CreditCard },
+          { name: 'Collections', path: '/collections', icon: History },
+          { name: 'Bulk Collections', path: '/bulk-collections', icon: Banknote, badge: 'NEW' },
+          { name: 'Cashier Desk', path: '/cashier-desk', icon: Calculator, badge: 'SHIFT' },
+          { name: 'Reports', path: '/reports', icon: BarChart3 },
+          { name: 'Accounting', path: '/chart-of-accounts', icon: BookOpen },
+          { name: 'Audit Logs', path: '/audit-logs', icon: FileText },
+          { name: 'Settings', path: '/settings', icon: Settings },
+        ];
       case 'Admin':
       case 'super_admin':
         return [
+          { name: 'SaaS Dashboard', path: '/super-admin/dashboard', icon: Crown, badge: 'SaaS' },
+          { name: 'Tenant Subscriptions', path: '/super-admin/tenants', icon: Building2 },
           { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
           { name: 'Employees', path: '/employees', icon: Users },
           { name: 'Customers', path: '/customers', icon: UserCheck },

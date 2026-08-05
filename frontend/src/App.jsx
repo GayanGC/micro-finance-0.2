@@ -26,6 +26,8 @@ import Reports from './pages/Reports';
 import CustomerProfile from './pages/CustomerProfile';
 import ChartOfAccounts from './pages/ChartOfAccounts';
 import CashierDesk from './pages/CashierDesk';
+import SaaSDashboard from './pages/SuperAdmin/SaaSDashboard';
+import TenantManagement from './pages/SuperAdmin/TenantManagement';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
@@ -72,11 +74,29 @@ function App() {
                   }
                 />
 
+                {/* SaaS Super Admin Routes */}
+                <Route
+                  path="/super-admin/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'super_admin', 'Admin']}>
+                      <SaaSDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/super-admin/tenants"
+                  element={
+                    <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'super_admin', 'Admin']}>
+                      <TenantManagement />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* Admin & super_admin Routes */}
                 <Route
                   path="/employees"
                   element={
-                    <ProtectedRoute allowedRoles={['Admin', 'super_admin']}>
+                    <ProtectedRoute allowedRoles={['Admin', 'super_admin', 'SUPER_ADMIN']}>
                       <Employees />
                     </ProtectedRoute>
                   }

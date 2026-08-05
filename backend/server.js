@@ -16,6 +16,7 @@ import reportRoutes from './routes/reportRoutes.js';
 import accountingRoutes from './routes/accountingRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import registerRoutes from './routes/registerRoutes.js';
+import tenantRoutes from './routes/tenantRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/accounting', accountingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/registers', registerRoutes);
+app.use('/api/tenants', tenantRoutes);
 
 // Health check endpoint (legacy + new)
 app.get('/api/health', (req, res) => {

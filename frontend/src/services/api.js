@@ -346,7 +346,33 @@ export const getAllRegistersApi = async (filters = {}) => {
   return response.data;
 };
 
+// ==========================================
+// SAAS TENANT & SUBSCRIPTION API
+// ==========================================
+export const getTenantsApi = async (filters = {}) => {
+  const params = new URLSearchParams(filters).toString();
+  const response = await API.get(`/tenants${params ? `?${params}` : ''}`);
+  return response.data;
+};
 
+export const getTenantByIdApi = async (id) => {
+  const response = await API.get(`/tenants/${id}`);
+  return response.data;
+};
 
+export const createTenantApi = async (tenantData) => {
+  const response = await API.post('/tenants', tenantData);
+  return response.data;
+};
+
+export const updateTenantApi = async (id, tenantData) => {
+  const response = await API.put(`/tenants/${id}`, tenantData);
+  return response.data;
+};
+
+export const deleteTenantApi = async (id) => {
+  const response = await API.delete(`/tenants/${id}`);
+  return response.data;
+};
 
 export default API;
