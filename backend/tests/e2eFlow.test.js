@@ -1,6 +1,7 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import connectDB from '../config/db.js';
 import app from '../server.js';
 
 dotenv.config();
@@ -19,6 +20,8 @@ describe('🚀 End-to-End Microfinance System Integration Flow', () => {
   const testNic = `${Math.floor(100000000 + Math.random() * 900000000)}V`;
 
   beforeAll(async () => {
+    await connectDB();
+
     // 1. Seed or Login Admin user
     await request(target).post('/api/auth/seed').send();
 
