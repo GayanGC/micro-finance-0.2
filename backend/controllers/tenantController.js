@@ -1,4 +1,5 @@
 import Tenant from '../models/Tenant.js';
+import TenantSettings from '../models/TenantSettings.js';
 
 // @desc    Register a new tenant company / subscriber
 // @route   POST /api/tenants
@@ -49,6 +50,16 @@ export const createTenant = async (req, res) => {
       maxUsers: maxUsers ? Number(maxUsers) : pkg === 'Premium' ? 100 : pkg === 'Standard' ? 25 : 10,
       maxLoans: maxLoans ? Number(maxLoans) : pkg === 'Premium' ? 5000 : pkg === 'Standard' ? 1000 : 200,
       notes: notes || '',
+    });
+
+    // Auto-create default settings document linked to tenant
+    await TenantSettings.create({
+      tenantId: tenant._id,
+      companyName: tenant.companyName,
+      contactEmail: tenant.adminEmail,
+      contactPhone: tenant.contactNumber,
+      currencySymbol: '$',
+      currencyCode: 'USD',
     });
 
     return res.status(201).json({ message: 'Tenant organization created successfully!', tenant });
