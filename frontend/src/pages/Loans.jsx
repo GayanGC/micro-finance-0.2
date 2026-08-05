@@ -308,7 +308,7 @@ const Loans = () => {
                       ${(loan?.monthlyInstallment || 0).toLocaleString()}/mo
                     </td>
                     <td className="px-4 py-3.5 font-extrabold text-emerald-600 dark:text-emerald-400">
-                      <div>${(loan?.remainingPrincipal ?? loan?.principalAmount || 0).toLocaleString()} <span className="text-[10px] text-slate-400 font-semibold">(Capital)</span></div>
+                      <div>${((loan?.remainingPrincipal ?? loan?.principalAmount) || 0).toLocaleString()} <span className="text-[10px] text-slate-400 font-semibold">(Capital)</span></div>
                       <div className="text-[11px] font-normal text-slate-400">Total Left: ${(loan?.remainingBalance || 0).toLocaleString()}</div>
                     </td>
                     <td className="px-4 py-3.5">

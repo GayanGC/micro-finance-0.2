@@ -76,6 +76,11 @@ export const getEmployeesApi = async () => {
   return response.data;
 };
 
+export const getAgentsApi = async () => {
+  const response = await API.get('/employees/agents');
+  return response.data;
+};
+
 // ==========================================
 // CUSTOMER API
 // ==========================================
@@ -104,7 +109,6 @@ export const getCustomerTimelineApi = async (id) => {
   const response = await API.get(`/customers/${id}/timeline`);
   return response.data;
 };
-
 
 // ==========================================
 // POLICY API
@@ -168,200 +172,6 @@ export const addRepaymentApi = async (repaymentData) => {
 
 export const onlinePaymentApi = async (paymentData) => {
   const response = await API.post('/repayments/online', paymentData);
-  return response.data;
-};
-
-export const getRepaymentsApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/repayments${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const bulkRepaymentApi = async (bulkData) => {
-  const response = await API.post('/repayments/bulk', bulkData);
-  return response.data;
-};
-
-// ==========================================
-// NOTIFICATION API
-// ==========================================
-export const getNotificationsApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/notifications${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const markNotificationReadApi = async (id) => {
-  const response = await API.put(`/notifications/${id}/read`);
-  return response.data;
-};
-
-export const markAllNotificationsReadApi = async () => {
-  const response = await API.put('/notifications/mark-all-read');
-  return response.data;
-};
-
-export const triggerOverdueAlertsApi = async () => {
-  const response = await API.post('/notifications/trigger-overdue');
-  return response.data;
-};
-
-export const deleteNotificationApi = async (id) => {
-  const response = await API.delete(`/notifications/${id}`);
-  return response.data;
-};
-
-// ==========================================
-// AUDIT LOG API
-// ==========================================
-export const getAuditLogsApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/audit${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const getAuditStatsApi = async () => {
-  const response = await API.get('/audit/stats');
-  return response.data;
-};
-
-// ==========================================
-// SYSTEM API
-// ==========================================
-export const getSystemModeApi = async () => {
-  const response = await API.get('/system/mode');
-  return response.data;
-};
-
-export const setSystemModeApi = async (configData) => {
-  const response = await API.put('/system/mode', configData);
-  return response.data;
-};
-
-export const getSystemHealthApi = async () => {
-  const response = await API.get('/system/health');
-  return response.data;
-};
-
-// ==========================================
-// HOLIDAY API
-// ==========================================
-export const getHolidaysApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/holidays${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const createHolidayApi = async (holidayData) => {
-  const response = await API.post('/holidays', holidayData);
-  return response.data;
-};
-
-export const deleteHolidayApi = async (id) => {
-  const response = await API.delete(`/holidays/${id}`);
-  return response.data;
-};
-
-// ==========================================
-// REPORTS API
-// ==========================================
-export const getLoanReportApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/reports/loans${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const getCollectionReportApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/reports/collections${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const getOutstandingReportApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/reports/outstanding${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const getPnLReportApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/reports/pnl${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-// ==========================================
-// ACCOUNTING / GENERAL LEDGER API
-// ==========================================
-export const getAccountsApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/accounting/accounts${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const createAccountApi = async (accountData) => {
-  const response = await API.post('/accounting/accounts', accountData);
-  return response.data;
-};
-
-export const getJournalEntriesApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/accounting/journal-entries${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const createJournalEntryApi = async (entryData) => {
-  const response = await API.post('/accounting/journal-entries', entryData);
-  return response.data;
-};
-
-// ==========================================
-// DASHBOARD ANALYTICS API
-// ==========================================
-export const getDashboardAnalyticsApi = async () => {
-  const response = await API.get('/dashboard/analytics');
-  return response.data;
-};
-
-// ==========================================
-// CASH REGISTER API
-// ==========================================
-export const openRegisterApi = async (registerData) => {
-  const response = await API.post('/registers/open', registerData);
-  return response.data;
-};
-
-export const getActiveRegisterApi = async () => {
-  const response = await API.get('/registers/active');
-  return response.data;
-};
-
-export const closeRegisterApi = async (closingData) => {
-  const response = await API.post('/registers/close', closingData);
-  return response.data;
-};
-
-export const getAllRegistersApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/registers${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-// ==========================================
-// SAAS TENANT & SUBSCRIPTION API
-// ==========================================
-export const getTenantsApi = async (filters = {}) => {
-  const params = new URLSearchParams(filters).toString();
-  const response = await API.get(`/tenants${params ? `?${params}` : ''}`);
-  return response.data;
-};
-
-export const getTenantByIdApi = async (id) => {
-  const response = await API.get(`/tenants/${id}`);
-  return response.data;
-};
-
-export const createTenantApi = async (tenantData) => {
-  const response = await API.post('/tenants', tenantData);
   return response.data;
 };
 
@@ -610,11 +420,4 @@ export const getPortalSettlementsApi = async () => {
   return response.data;
 };
 
-export const getAgentsApi = async () => {
-  const response = await API.get('/employees/agents');
-  return response.data;
-};
-
 export default API;
-
-

@@ -97,15 +97,6 @@ const Collections = () => {
     }
   };
 
-  const handleLoanSelectionChange = (e) => {
-    const loanId = e.target.value;
-    setSelectedLoanId(loanId);
-    const selectedLoan = loans.find((l) => l._id === loanId);
-    if (selectedLoan) {
-      setAmountPaid(selectedLoan.monthlyInstallment || '');
-    }
-  };
-
   const captureGPS = () => {
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by this browser.');
