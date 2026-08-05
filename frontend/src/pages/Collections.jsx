@@ -18,6 +18,7 @@ import {
   WifiOff,
   Download,
   FileText,
+  Zap,
 } from 'lucide-react';
 
 const Collections = () => {
@@ -214,6 +215,15 @@ const Collections = () => {
                 />
               </div>
 
+              {selectedLoan && Number(amountPaid) > (selectedLoan.monthlyInstallment || 0) && (
+                <div className="sm:col-span-2 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-300 flex items-center gap-2 animate-fade-in font-semibold">
+                  <Zap className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span>
+                    <strong>Excess Capital Paydown!</strong> Extra amount of <strong>${(Number(amountPaid) - Number(selectedLoan.monthlyInstallment)).toFixed(2)}</strong> will directly reduce the remaining Capital Principal! Future monthly interest will adjust automatically.
+                  </span>
+                </div>
+              )}
+
               <div>
                 <label className="block text-slate-600 dark:text-slate-300 mb-1">Payment Method / Channel</label>
                 <select
@@ -328,6 +338,81 @@ const Collections = () => {
         </div>
 
       </div>
+
+      {/* ── Active Repayment Schedule Table for Selected Borrower ─────────────── */}
+      {selectedLoan && Array.isArray(selectedLoan.repaymentSchedule) && selectedLoan.repaymentSchedule.length > 0 && (
+        <div className="glass-panel p-6 rounded-3xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-brand-500" />
+              Active Repayment Schedule ({selectedLoan.customer?.fullName || selectedLoan.customer?.name})
+            </h2>
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="text-slate-500">Remaining Capital: <strong className="text-emerald-600 dark:text-emerald-400 font-black">${(selectedLoan.remainingPrincipal ?? selectedLoan.principalAmount)?.toLocaleString()}</strong></span>
+              <span className="text-slate-500">Method: <strong className="text-brand-600 dark:text-brand-400 font-bold">{selectedLoan.interestMethod || 'Reducing Balance'}</strong></span>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-100 dark:bg-slate-800/80 uppercase font-semibold text-slate-500">
+                <tr>
+                  <th className="px-4 py-3 rounded-l-xl">Month #</th>
+                  <th className="px-4 py-3">Due Date</th>
+                  <th className="px-4 py-3">Expected EMI</th>
+                  <th className="px-4 py-3">Capital Principal</th>
+                  <th className="px-4 py-3">Interest Portion</th>
+                  <th className="px-4 py-3 text-right rounded-r-xl">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                {selectedLoan.repaymentSchedule.map((s, idx) => {
+                  const isPending = s.status === 'pending' || s.status === 'Pending' || s.status === 'partial';
+                  const firstPendingIdx = selectedLoan.repaymentSchedule.findIndex(item => item.status === 'pending' || item.status === 'Pending' || item.status === 'partial');
+                  const isFirstPending = isPending && idx === firstPendingIdx;
+
+                  return (
+                    <tr
+                      key={idx}
+                      className={`transition ${
+                        isFirstPending
+                          ? 'bg-amber-50/90 dark:bg-amber-950/50 font-bold border-l-4 border-l-amber-500'
+                          : s.status === 'paid'
+                          ? 'bg-emerald-50/30 dark:bg-emerald-950/20 text-slate-400'
+                          : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                        Month #{s.installmentNo || idx + 1}
+                        {isFirstPending && (
+                          <span className="ml-2 text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-black tracking-wide">
+                            CURRENT DUE
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-slate-500">{new Date(s.dueDate).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 font-black text-slate-900 dark:text-white">${Number(s.expectedInstallment || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3 font-semibold text-emerald-600 dark:text-emerald-400">${Number(s.principalComponent || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-slate-500">${Number(s.interestComponent || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
+                          s.status === 'paid'
+                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200'
+                            : s.status === 'partial'
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200'
+                        }`}>
+                          {s.status?.toUpperCase() || 'PENDING'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Transaction History Ledger */}
       <div className="glass-panel p-6 rounded-3xl space-y-4">

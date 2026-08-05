@@ -145,6 +145,25 @@ export const createLoan = async (req, res) => {
     const enterpriseMode = isEnterpriseMode === true;
     const initialStatus = enterpriseMode ? 'Pending' : 'Active';
 
+    const holidays = await Holiday.find({});
+    const rawSchedule = generateAmortizationSchedule(
+      math.principalAmount,
+      policy.interestRate,
+      policy.durationMonths,
+      policy.interestType,
+      nextDueDate,
+      holidays
+    );
+
+    const repaymentSchedule = rawSchedule.map((s) => ({
+      installmentNo: s.installmentNo,
+      dueDate: new Date(s.dueDate),
+      expectedInstallment: s.emi || s.expectedInstallment,
+      principalComponent: s.principalComponent,
+      interestComponent: s.interestComponent,
+      status: 'pending',
+    }));
+
     const loan = await Loan.create({
       customer: customer._id,
       policy: policy._id,
@@ -153,6 +172,8 @@ export const createLoan = async (req, res) => {
       totalPayable: math.totalPayable,
       monthlyInstallment: math.monthlyInstallment,
       remainingBalance: math.totalPayable,
+      remainingPrincipal: math.principalAmount,
+      repaymentSchedule,
       collateralDetails: collateralDetails || '',
       collateral: collateral || null,
       guarantorCustomers: guarantorCustomers || [],

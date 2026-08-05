@@ -41,8 +41,69 @@ export const addRepayment = async (req, res) => {
     const penaltyInfo = computePenalty(loan, effectivePaymentDate);
 
     const payAmount = Number(amountPaid);
-    const penaltyPaid = Math.min(payAmount * 0.1, penaltyInfo.penaltyAmount); // Penalty portion of payment
+    const penaltyPaid = Math.min(payAmount * 0.1, penaltyInfo.penaltyAmount); // Penalty portion
     const newBalance = Math.max(0, Math.round((loan.remainingBalance - payAmount) * 100) / 100);
+
+    // === Step A & B: Identify Policy Method & Calculate Interest Due ===
+    const isReducing = loan.interestMethod === 'Reducing Balance' || loan.interestMethod === 'Amortization';
+    const annualRate = Number(loan.policy?.interestRate || 12);
+    const monthlyRate = (annualRate / 100) / 12;
+
+    const currentPrincipal = loan.remainingPrincipal !== undefined && loan.remainingPrincipal !== null 
+      ? loan.remainingPrincipal 
+      : loan.principalAmount;
+
+    // Interest due for this period on current remaining capital
+    const interestDue = isReducing
+      ? Math.round(currentPrincipal * monthlyRate * 100) / 100
+      : Math.round(((loan.totalInterest || 0) / (loan.policy?.durationMonths || 12)) * 100) / 100;
+
+    // === Step C: Subtract Penalty & Interest to get Principal Paydown (Capital Reduction) ===
+    const netAfterPenalty = Math.max(0, payAmount - penaltyPaid);
+    const actualInterestCharged = Math.min(netAfterPenalty, interestDue);
+    const principalPaydown = Math.max(0, Math.round((netAfterPenalty - actualInterestCharged) * 100) / 100);
+
+    // === Step D: Deduct Principal Paydown from remainingPrincipal ===
+    const newPrincipal = Math.max(0, Math.round((currentPrincipal - principalPaydown) * 100) / 100);
+    loan.remainingPrincipal = newPrincipal;
+
+    // === Step E: Update Repayment Schedule & Recalculate Future Installments ===
+    if (Array.isArray(loan.repaymentSchedule) && loan.repaymentSchedule.length > 0) {
+      const pendingItemIndex = loan.repaymentSchedule.findIndex(
+        (s) => s.status === 'pending' || s.status === 'partial' || s.status === 'Pending'
+      );
+
+      if (pendingItemIndex !== -1) {
+        const item = loan.repaymentSchedule[pendingItemIndex];
+        const newPaid = (item.paidAmount || 0) + payAmount;
+        item.paidAmount = newPaid;
+        item.paidDate = effectivePaymentDate;
+
+        if (newPaid >= item.expectedInstallment) {
+          item.status = 'paid';
+        } else {
+          item.status = 'partial';
+        }
+      }
+
+      // Recalculate future pending installments based on newly reduced remainingPrincipal
+      const remainingPendingItems = loan.repaymentSchedule.filter(
+        (s) => s.status === 'pending' || s.status === 'Pending'
+      );
+      const remainingMonths = remainingPendingItems.length;
+
+      if (remainingMonths > 0 && newPrincipal > 0) {
+        const futureMonthlyInterest = Math.round(newPrincipal * monthlyRate * 100) / 100;
+        const futureMonthlyPrincipal = Math.round((newPrincipal / remainingMonths) * 100) / 100;
+        const futureEmi = Math.round((futureMonthlyInterest + futureMonthlyPrincipal) * 100) / 100;
+
+        remainingPendingItems.forEach((s) => {
+          s.interestComponent = futureMonthlyInterest;
+          s.principalComponent = futureMonthlyPrincipal;
+          s.expectedInstallment = futureEmi;
+        });
+      }
+    }
 
     // Generate unique receipt number
     const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -78,7 +139,8 @@ export const addRepayment = async (req, res) => {
     nextDue.setDate(nextDue.getDate() + 30);
     loan.nextDueDate = nextDue;
 
-    if (newBalance <= 0) {
+    // === Step F: Auto-complete loan if remainingPrincipal or newBalance <= 0 ===
+    if (newPrincipal <= 0 || newBalance <= 0) {
       loan.status = 'Completed';
     }
     await loan.save();

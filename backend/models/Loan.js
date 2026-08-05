@@ -33,6 +33,21 @@ const approvalWorkflowSchema = new mongoose.Schema({
   rejectionReason: { type: String, default: '' },
 }, { _id: false });
 
+const scheduleItemSchema = new mongoose.Schema({
+  installmentNo: { type: Number, required: true },
+  dueDate: { type: Date, required: true },
+  expectedInstallment: { type: Number, required: true },
+  principalComponent: { type: Number, required: true },
+  interestComponent: { type: Number, required: true },
+  status: {
+    type: String,
+    enum: ['pending', 'paid', 'partial'],
+    default: 'pending',
+  },
+  paidAmount: { type: Number, default: 0 },
+  paidDate: { type: Date },
+}, { _id: false });
+
 const loanSchema = new mongoose.Schema(
   {
     customer: {
@@ -69,6 +84,13 @@ const loanSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    remainingPrincipal: {
+      type: Number,
+      default: function () {
+        return this.principalAmount || 0;
+      },
+    },
+    repaymentSchedule: [scheduleItemSchema],
     collateralDetails: {
       type: String,
       default: '',
