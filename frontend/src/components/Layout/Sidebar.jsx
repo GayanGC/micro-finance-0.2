@@ -103,9 +103,9 @@ const Sidebar = ({ mobileOpen, onCloseMobile }) => {
         ];
       case 'Customer':
         return [
-          { name: 'My Profile', path: '/profile', icon: User },
-          { name: 'My Active Loans', path: '/active-loans', icon: CreditCard },
-          { name: 'Monthly Settlements', path: '/settlements', icon: CalendarCheck },
+          { name: 'My Profile', path: '/portal/profile', icon: User },
+          { name: 'My Active Loans', path: '/portal/loans', icon: CreditCard },
+          { name: 'Payment Receipts', path: '/portal/settlements', icon: FileText },
         ];
       default:
         return [];

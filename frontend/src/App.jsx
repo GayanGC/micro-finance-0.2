@@ -28,12 +28,16 @@ import ChartOfAccounts from './pages/ChartOfAccounts';
 import CashierDesk from './pages/CashierDesk';
 import SaaSDashboard from './pages/SuperAdmin/SaaSDashboard';
 import TenantManagement from './pages/SuperAdmin/TenantManagement';
+import PortalProfile from './pages/CustomerPortal/MyProfile';
+import PortalLoans from './pages/CustomerPortal/MyActiveLoans';
+import PortalSettlements from './pages/CustomerPortal/MySettlements';
 
 // Smart Home Index Redirect
 const HomeRedirect = () => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'Customer') return <Navigate to="/profile" replace />;
+  if (user.role === 'Customer') return <Navigate to="/portal/profile" replace />;
+  if (user.role === 'SUPER_ADMIN') return <Navigate to="/super-admin/dashboard" replace />;
   return <Navigate to="/dashboard" replace />;
 };
 
@@ -206,6 +210,32 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['Admin', 'Agent', 'super_admin']}>
                       <BulkCollections />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Customer / Borrower Workspace Routes */}
+                <Route
+                  path="/portal/profile"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer', 'Admin', 'super_admin', 'SUPER_ADMIN']}>
+                      <PortalProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/portal/loans"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer', 'Admin', 'super_admin', 'SUPER_ADMIN']}>
+                      <PortalLoans />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/portal/settlements"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer', 'Admin', 'super_admin', 'SUPER_ADMIN']}>
+                      <PortalSettlements />
                     </ProtectedRoute>
                   }
                 />

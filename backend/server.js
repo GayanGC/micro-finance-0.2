@@ -18,6 +18,7 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import registerRoutes from './routes/registerRoutes.js';
 import tenantRoutes from './routes/tenantRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import customerPortalRoutes from './routes/customerPortalRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +60,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/registers', registerRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/portal', customerPortalRoutes);
 
 // Health check endpoint (legacy + new)
 app.get('/api/health', (req, res) => {

@@ -587,4 +587,23 @@ export const exportBackupApi = async () => {
   return response.data;
 };
 
+// ==========================================
+// CUSTOMER PORTAL API
+// ==========================================
+export const getPortalProfileApi = async () => {
+  const response = await API.get('/portal/profile');
+  return response.data;
+};
+
+export const getPortalLoansApi = async () => {
+  const response = await API.get('/portal/loans');
+  return response.data;
+};
+
+export const getPortalSettlementsApi = async () => {
+  const response = await API.get('/portal/settlements');
+  return response.data;
+};
+
 export default API;
+
