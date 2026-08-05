@@ -508,6 +508,11 @@ export const createJournalEntryApi = async (entryData) => {
   return response.data;
 };
 
+export const createManualEntryApi = async (entryData) => {
+  const response = await API.post('/accounting/manual-entry', entryData);
+  return response.data;
+};
+
 // ==========================================
 // DASHBOARD ANALYTICS API
 // ==========================================

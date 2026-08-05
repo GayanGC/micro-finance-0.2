@@ -133,9 +133,13 @@ const CountCard = ({ label, value, icon: Icon, color = 'slate' }) => (
 const INPUT_CLS =
   'px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-xs';
 
+import { useSubscription } from '../hooks/useSubscription';
+import FeatureLockOverlay from '../components/Common/FeatureLockOverlay';
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 const Reports = () => {
+  const { isLite } = useSubscription();
   const [activeTab, setActiveTab] = useState('loans');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -283,6 +287,23 @@ const Reports = () => {
     { id: 'outstanding', label: 'Outstanding', icon: TrendingDown },
     { id: 'pnl', label: 'P&L Summary', icon: TrendingUp },
   ];
+
+  if (isLite) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <BarChart3 className="w-7 h-7 text-brand-500" />
+            Financial Reports &amp; Statements
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Export loan portfolio statements, collection summaries, and profit &amp; loss statements.
+          </p>
+        </div>
+        <FeatureLockOverlay featureTitle="Enterprise Financial Reports &amp; CSV/PDF Exports" minPackage="Standard (Pro)" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

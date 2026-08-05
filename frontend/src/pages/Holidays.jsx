@@ -13,6 +13,9 @@ import {
   XCircle,
 } from 'lucide-react';
 
+import { useSubscription } from '../hooks/useSubscription';
+import FeatureLockOverlay from '../components/Common/FeatureLockOverlay';
+
 const TYPE_COLORS = {
   Holiday: 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300 border border-red-200 dark:border-red-800',
   Skip: 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800',
@@ -22,6 +25,7 @@ const INPUT_CLS =
   'w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-xs';
 
 const Holidays = () => {
+  const { isLite } = useSubscription();
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -118,6 +122,23 @@ const Holidays = () => {
   };
 
   // ── Render ─────────────────────────────────────────────────────────
+  if (isLite) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CalendarX2 className="w-7 h-7 text-brand-500" />
+            Holiday &amp; Skip Day Plan
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Register public holidays and skip days with automated due date shifting.
+          </p>
+        </div>
+        <FeatureLockOverlay featureTitle="Automated Holiday &amp; Skip Day Planner" minPackage="Standard (Pro)" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}

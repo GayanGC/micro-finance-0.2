@@ -6,14 +6,17 @@ import {
   getPnLReport,
 } from '../controllers/reportController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
+import { requireSubscriptionTier } from '../middleware/tenantGatingMiddleware.js';
 
 const router = express.Router();
 
-const reportAccess = protect, reportRoles = authorize('Admin', 'super_admin', 'auditor');
+router.use(protect);
+router.use(authorize('Admin', 'super_admin', 'auditor', 'SUPER_ADMIN'));
+router.use(requireSubscriptionTier('Standard'));
 
-router.get('/loans', reportAccess, reportRoles, getLoanReport);
-router.get('/collections', reportAccess, reportRoles, getCollectionReport);
-router.get('/outstanding', reportAccess, reportRoles, getOutstandingReport);
-router.get('/pnl', reportAccess, reportRoles, getPnLReport);
+router.get('/loans', getLoanReport);
+router.get('/collections', getCollectionReport);
+router.get('/outstanding', getOutstandingReport);
+router.get('/pnl', getPnLReport);
 
 export default router;

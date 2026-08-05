@@ -226,9 +226,95 @@ export const getJournalEntries = async (req, res) => {
       .populate('createdBy', 'name role')
       .sort({ transactionDate: -1, createdAt: -1 });
 
-    return res.json(entries);
+    return res.json({ journalEntries, stats });
   } catch (error) {
     console.error('Error fetching journal entries:', error);
     return res.status(500).json({ message: 'Failed to fetch journal entries', error: error.message });
+  }
+};
+
+// @desc    Create a Manual Income or Expense Journal Entry
+// @route   POST /api/accounting/manual-entry
+// @access  Private (Admin, super_admin, SUPER_ADMIN)
+export const createManualEntry = async (req, res) => {
+  const session = await mongoose.startSession();
+  try {
+    const { amount, type, description, accountId, paymentMethod } = req.body;
+
+    if (!amount || Number(amount) <= 0 || !type || !description || !accountId) {
+      return res.status(400).json({ message: 'Amount, type (Income or Expense), description, and target account are required.' });
+    }
+
+    if (!['Income', 'Expense'].includes(type)) {
+      return res.status(400).json({ message: 'Transaction type must be Income or Expense.' });
+    }
+
+    const numAmount = Number(amount);
+    const targetAccount = await Account.findById(accountId);
+    if (!targetAccount) {
+      return res.status(404).json({ message: 'Target ledger account not found.' });
+    }
+
+    // Resolve cash / bank contra account
+    const contraAccName = paymentMethod === 'Bank Transfer' ? 'Bank Operating Account' : 'Cash on Hand / Vault';
+    let contraAccount = await Account.findOne({ accountName: contraAccName });
+
+    if (!contraAccount) {
+      contraAccount = await Account.findOne({ accountType: 'Asset' });
+    }
+
+    let debitAcc, creditAcc;
+
+    if (type === 'Expense') {
+      // Debit: Expense Account (increases expense), Credit: Cash/Bank Account (decreases asset)
+      debitAcc = targetAccount;
+      creditAcc = contraAccount;
+    } else {
+      // Debit: Cash/Bank Account (increases asset), Credit: Income Account (increases income)
+      debitAcc = contraAccount;
+      creditAcc = targetAccount;
+    }
+
+    let resultEntry;
+
+    await session.withTransaction(async () => {
+      // Update balances
+      updateAccountBalance(debitAcc, numAmount, 'DEBIT');
+      updateAccountBalance(creditAcc, numAmount, 'CREDIT');
+
+      await debitAcc.save({ session });
+      await creditAcc.save({ session });
+
+      const dateCode = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const referenceId = `MAN-${type.substring(0, 3).toUpperCase()}-${dateCode}-${randomSuffix}`;
+
+      const [entry] = await JournalEntry.create(
+        [
+          {
+            transactionDate: new Date(),
+            referenceId,
+            description: `Manual ${type}: ${description}`,
+            debitAccount: debitAcc._id,
+            creditAccount: creditAcc._id,
+            amount: numAmount,
+            createdBy: req.user._id,
+          },
+        ],
+        { session }
+      );
+
+      resultEntry = entry;
+    });
+
+    return res.status(201).json({
+      message: `Manual ${type} entry of $${numAmount.toFixed(2)} recorded successfully!`,
+      journalEntry: resultEntry,
+    });
+  } catch (error) {
+    console.error('Error recording manual entry:', error);
+    return res.status(500).json({ message: 'Failed to record manual entry', error: error.message });
+  } finally {
+    session.endSession();
   }
 };

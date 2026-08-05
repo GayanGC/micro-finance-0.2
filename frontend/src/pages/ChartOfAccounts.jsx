@@ -4,6 +4,7 @@ import {
   createAccountApi,
   getJournalEntriesApi,
   createJournalEntryApi,
+  createManualEntryApi,
 } from '../services/api';
 import {
   BookOpen,
@@ -70,8 +71,11 @@ const ChartOfAccounts = () => {
   // Modals state
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showJournalModal, setShowJournalModal] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualEntryType, setManualEntryType] = useState('Expense'); // 'Expense' | 'Income'
   const [submittingAccount, setSubmittingAccount] = useState(false);
   const [submittingJournal, setSubmittingJournal] = useState(false);
+  const [submittingManual, setSubmittingManual] = useState(false);
 
   // Form states
   const [accountForm, setAccountForm] = useState({
@@ -91,6 +95,25 @@ const ChartOfAccounts = () => {
     referenceId: '',
     transactionDate: new Date().toISOString().slice(0, 10),
   });
+
+  const [manualForm, setManualForm] = useState({
+    amount: '',
+    description: '',
+    accountId: '',
+    paymentMethod: 'Cash',
+  });
+
+  const openManualModal = (type) => {
+    setManualEntryType(type);
+    const defaultAcc = accounts.find((a) => a.accountType === type)?._id || '';
+    setManualForm({
+      amount: '',
+      description: '',
+      accountId: defaultAcc,
+      paymentMethod: 'Cash',
+    });
+    setShowManualModal(true);
+  };
 
   const showToastMsg = (type, text) => {
     setToast({ type, text });
@@ -179,6 +202,29 @@ const ChartOfAccounts = () => {
     }
   };
 
+  // Handle Manual Income/Expense Submit
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualForm.amount || !manualForm.description || !manualForm.accountId) {
+      showToastMsg('error', 'Amount, description, and target account are required.');
+      return;
+    }
+    setSubmittingManual(true);
+    try {
+      const res = await createManualEntryApi({
+        ...manualForm,
+        type: manualEntryType,
+      });
+      showToastMsg('success', res.message || `Manual ${manualEntryType} entry recorded!`);
+      setShowManualModal(false);
+      fetchData();
+    } catch (err) {
+      showToastMsg('error', err.response?.data?.message || `Failed to record manual ${manualEntryType}.`);
+    } finally {
+      setSubmittingManual(false);
+    }
+  };
+
   // Filter accounts
   const filteredAccounts = accounts.filter((acc) => {
     const matchType = filterType === 'ALL' || acc.accountType === filterType;
@@ -219,16 +265,28 @@ const ChartOfAccounts = () => {
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
+            onClick={() => openManualModal('Expense')}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition shadow-md shadow-rose-500/20"
+          >
+            <TrendingDown className="w-4 h-4" /> + Add Expense
+          </button>
+          <button
+            onClick={() => openManualModal('Income')}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-md shadow-emerald-500/20"
+          >
+            <TrendingUp className="w-4 h-4" /> + Add Income
+          </button>
+          <button
             onClick={() => setShowAccountModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white transition shadow-lg shadow-brand-500/25"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-500 text-white transition shadow-md shadow-brand-500/20"
           >
             <PlusCircle className="w-4 h-4" /> Add Account
           </button>
           <button
             onClick={() => setShowJournalModal(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition shadow-lg shadow-purple-500/25"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition shadow-md shadow-purple-500/20"
           >
-            <ArrowRightLeft className="w-4 h-4" /> Post Journal Entry
+            <ArrowRightLeft className="w-4 h-4" /> Post Journal
           </button>
         </div>
       </div>
@@ -646,6 +704,116 @@ const ChartOfAccounts = () => {
                   className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold transition shadow-lg shadow-purple-500/25 flex items-center gap-2"
                 >
                   {submittingJournal ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Post Entry'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Income / Expense Modal */}
+      {showManualModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                {manualEntryType === 'Expense' ? (
+                  <TrendingDown className="w-5 h-5 text-rose-500" />
+                ) : (
+                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                )}
+                Record Manual {manualEntryType} Entry
+              </h3>
+              <button
+                onClick={() => setShowManualModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualSubmit} className="space-y-4 text-xs font-medium">
+              <div>
+                <label className="block text-slate-600 dark:text-slate-300 mb-1">Target Account ({manualEntryType}) *</label>
+                <select
+                  required
+                  value={manualForm.accountId}
+                  onChange={(e) => setManualForm({ ...manualForm, accountId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold"
+                >
+                  <option value="">-- Select {manualEntryType} Account --</option>
+                  {accounts
+                    .filter((a) => a.accountType === manualEntryType)
+                    .map((a) => (
+                      <option key={a._id} value={a._id}>
+                        {a.accountNumber} - {a.accountName} (Bal: ${fmt(a.currentBalance)})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-600 dark:text-slate-300 mb-1">Amount ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    required
+                    value={manualForm.amount}
+                    onChange={(e) => setManualForm({ ...manualForm, amount: e.target.value })}
+                    placeholder="150.00"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 dark:text-slate-300 mb-1">Payment Method</label>
+                  <select
+                    value={manualForm.paymentMethod}
+                    onChange={(e) => setManualForm({ ...manualForm, paymentMethod: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  >
+                    <option value="Cash">Cash Vault</option>
+                    <option value="Bank Transfer">Bank Operating Account</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-600 dark:text-slate-300 mb-1">Description / Reason *</label>
+                <input
+                  type="text"
+                  required
+                  value={manualForm.description}
+                  onChange={(e) => setManualForm({ ...manualForm, description: e.target.value })}
+                  placeholder={manualEntryType === 'Expense' ? 'e.g. Office Stationery & Supplies' : 'e.g. Processing Fee Collection'}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowManualModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingManual}
+                  className={`px-5 py-2.5 rounded-xl text-white font-bold transition shadow-lg flex items-center gap-2 ${
+                    manualEntryType === 'Expense'
+                      ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/25'
+                      : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/25'
+                  }`}
+                >
+                  {submittingManual ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    `Save ${manualEntryType}`
+                  )}
                 </button>
               </div>
             </form>
